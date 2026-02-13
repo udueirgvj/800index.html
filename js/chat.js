@@ -65,11 +65,6 @@ const Chat = {
                 });
             });
         });
-
-        // استماع للتحديثات
-        this.chatListListener = db.ref('messages').on('value', () => {
-            // تحديث القائمة
-        });
     },
 
     // عرض قائمة المحادثات
@@ -117,14 +112,14 @@ const Chat = {
                         <span class="chat-time">${time}</span>
                     </div>
                     <div class="chat-last-msg">${item.lastMessage || ''}</div>
-                    <div style="font-size: 11px; color: #7f8c8d;">${subtitle}</div>
+                    <div style="font-size: 11px; color: #666;">${subtitle}</div>
                 </div>
             `;
             container.appendChild(chatItem);
         }
 
         if (chatList.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 30px; color: #7f8c8d;">لا توجد محادثات بعد</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 30px; color: #999;">لا توجد محادثات بعد</div>';
         }
     },
 
@@ -185,7 +180,7 @@ const Chat = {
         container.innerHTML = '';
 
         if (!snapshot.exists()) {
-            container.innerHTML = '<div style="text-align:center;color:#7f8c8d;padding:20px;">أرسل أول رسالة 👋</div>';
+            container.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">أرسل أول رسالة 👋</div>';
             return;
         }
 
@@ -202,7 +197,7 @@ const Chat = {
                 // جلب اسم المرسل
                 const userSnap = await db.ref(`users/${msg.senderId}`).once('value');
                 const user = userSnap.val();
-                senderName = `<div style="font-size: 11px; color: #adb5bd; margin-bottom: 4px;">${user?.fullName || 'مستخدم'}</div>`;
+                senderName = `<div style="font-size: 11px; color: #666; margin-bottom: 4px;">${user?.fullName || 'مستخدم'}</div>`;
             }
 
             msgDiv.innerHTML = `
@@ -318,7 +313,7 @@ const Chat = {
                         <div class="chat-avatar" style="width: 40px; height: 40px;">${user.fullName.charAt(0)}</div>
                         <div>
                             <div><strong>${user.fullName}</strong></div>
-                            <div style="color: #7f8c8d;">@${user.username}</div>
+                            <div style="color: #666;">@${user.username}</div>
                         </div>
                     </div>
                 `;
@@ -337,7 +332,7 @@ const Chat = {
                         </div>
                         <div>
                             <div><strong>${group.name}</strong></div>
-                            <div style="color: #7f8c8d;">${group.type === 'channel' ? 'قناة' : 'مجموعة'} · ${group.memberCount || 0} عضو</div>
+                            <div style="color: #666;">${group.type === 'channel' ? 'قناة' : 'مجموعة'} · ${group.memberCount || 0} عضو</div>
                         </div>
                     </div>
                 `;
@@ -345,7 +340,7 @@ const Chat = {
         });
 
         if (html === '') {
-            resultsDiv.innerHTML = '<div style="padding: 12px; color: #7f8c8d;">لا توجد نتائج</div>';
+            resultsDiv.innerHTML = '<div style="padding: 12px; color: #999;">لا توجد نتائج</div>';
         } else {
             resultsDiv.innerHTML = html;
         }
