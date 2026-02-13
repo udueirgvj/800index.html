@@ -213,6 +213,7 @@
             border-radius: 10px;
             cursor: pointer;
             transition: background 0.2s;
+            position: relative;
         }
         .chat-list-item:hover {
             background: #f5f5f5;
@@ -229,11 +230,32 @@
             font-size: 20px;
             flex-shrink: 0;
             overflow: hidden;
+            position: relative;
         }
         .chat-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+        .online-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4caf50;
+            border: 2px solid white;
+        }
+        .offline-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #9e9e9e;
+            border: 2px solid white;
         }
         .chat-info {
             flex: 1;
@@ -289,10 +311,26 @@
         }
         .chat-header-name {
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .verified-badge {
+            background: #ffd700;
+            color: #333;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 12px;
         }
         .chat-header-status {
             font-size: 12px;
             opacity: 0.9;
+        }
+        .online-status {
+            color: #4caf50;
+        }
+        .offline-status {
+            color: #ccc;
         }
         .admin-badge {
             background: gold;
@@ -388,7 +426,7 @@
         .success {
             color: #27ae60;
         }
-        /* زر إنشاء مجموعة/قناة (عائم) */
+        /* زر الإضافة العائم */
         .fab {
             position: absolute;
             bottom: 20px;
@@ -457,6 +495,28 @@
             cursor: pointer;
             margin-top: 16px;
         }
+        /* نافذة قائمة العدادات المنبثقة */
+        #countersMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s;
+            transform: translateY(100%);
+        }
+        #countersMenu.open {
+            transform: translateY(0);
+        }
+        /* بوت */
+        .bot-message {
+            background: #e3f2fd;
+            border-right: 4px solid #2196f3;
+        }
     </style>
 </head>
 <body>
@@ -474,7 +534,7 @@
             <div id="searchResults" class="search-results"></div>
         </div>
 
-        <!-- القائمة الجانبية (إعدادات بسيطة) -->
+        <!-- القائمة الجانبية -->
         <div id="drawerOverlay" class="drawer-overlay" onclick="UI.closeDrawer()"></div>
         <div id="drawer" class="drawer">
             <div class="drawer-header">
@@ -487,10 +547,8 @@
             <div class="drawer-menu-item" onclick="UI.editName()">✏️ تغيير الاسم</div>
             <div class="drawer-menu-item" onclick="UI.editUsername()">🆔 تغيير اسم المستخدم</div>
             <div class="drawer-menu-item" onclick="UI.toggleDarkMode()">🌙 الوضع الداكن</div>
+            <div class="drawer-menu-item" onclick="UI.showSettings('counters')">📊 العدادات</div>
             <div class="drawer-menu-item" onclick="Auth.logout()">🚪 تسجيل خروج</div>
-            <div class="drawer-menu-item" onclick="UI.showSettings('counters')">
-    <span>📊</span> العدادات
-            </div>
         </div>
 
         <!-- المحتوى الرئيسي -->
@@ -505,7 +563,7 @@
                 <div style="background:rgba(255,255,255,0.2); padding:4px 12px; border-radius:20px;">700K+</div>
             </div>
 
-            <!-- قائمة المحادثات (دردشات + قنوات + مجموعات) -->
+            <!-- قائمة المحادثات -->
             <div id="chatListContainer" class="chat-list"></div>
         </div>
 
@@ -520,7 +578,7 @@
             </div>
             <div class="modal-content">
                 <input type="text" id="createName" placeholder="الاسم (مثل: أخبار التكنولوجيا)">
-                <input type="text" id="createUsername" placeholder="اسم المستخدم (مثل: @technews)">
+                <input type="text" id="createUsername" placeholder="اسم المستخدم (مثل: technews)">
                 <select id="createType">
                     <option value="group">مجموعة (يمكن للجميع الكتابة)</option>
                     <option value="channel">قناة (المالك فقط يكتب)</option>
@@ -530,14 +588,45 @@
             </div>
         </div>
 
-        <!-- غرفة الدردشة الفردية/الجماعية/قناة -->
+        <!-- نافذة قائمة العدادات المنبثقة -->
+        <div id="countersMenu">
+            <div class="modal-header" style="background: #667eea;">
+                <div class="back-btn" onclick="UI.closeCountersMenu()">←</div>
+                <div>📊 القائمة</div>
+            </div>
+            <div style="padding: 20px; overflow-y: auto;">
+                <div class="drawer-menu-item" onclick="UI.countersAction('blocked')">
+                    <span>🚫</span> الشخص محظورين
+                </div>
+                <div class="drawer-menu-item" onclick="UI.countersAction('sessions')">
+                    <span>📱</span> جلسات الذي في الحساب
+                </div>
+                <div class="drawer-menu-item" onclick="UI.countersAction('privacy')">
+                    <span>🔒</span> الخصوصية والأمان
+                </div>
+                <div class="drawer-menu-item" onclick="UI.countersAction('storage')">
+                    <span>💾</span> البيانات والتخزين
+                </div>
+                <div class="drawer-menu-item" onclick="UI.countersAction('power')">
+                    <span>⚡</span> توفير الطاقة
+                </div>
+                <div class="drawer-menu-item" onclick="UI.countersAction('badges')">
+                    <span>🏷️</span> الشعارات
+                </div>
+                <div class="drawer-menu-item" onclick="UI.countersAction('folders')">
+                    <span>📁</span> المجلدات
+                </div>
+            </div>
+        </div>
+
+        <!-- غرفة الدردشة -->
         <div id="chatRoom" class="chat-room">
             <div class="chat-header">
                 <div class="back-btn" onclick="Chat.close()">←</div>
                 <div id="chatAvatar" class="chat-avatar">👤</div>
                 <div class="chat-header-info">
-                    <div id="chatName">...</div>
-                    <div id="chatStatus"></div>
+                    <div id="chatName" class="chat-header-name"></div>
+                    <div id="chatStatus" class="chat-header-status"></div>
                 </div>
                 <div id="chatAdminControls" style="display:none;">
                     <button onclick="Chat.banUser()" style="background:#e74c3c; border:none; color:white; padding:4px 8px; border-radius:4px;">حظر</button>
@@ -565,9 +654,25 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // -------------------- Current User --------------------
+        // -------------------- Current User from localStorage --------------------
         let currentUser = JSON.parse(localStorage.getItem('currentUser'));
         if (!currentUser) window.location.href = 'index.html';
+
+        // -------------------- نظام الحضور (Presence) --------------------
+        const userStatusRef = db.ref(`/status/${currentUser.uid}`);
+        const connectedRef = db.ref('.info/connected');
+        connectedRef.on('value', (snap) => {
+            if (snap.val() === true) {
+                userStatusRef.set({
+                    state: 'online',
+                    lastSeen: Date.now()
+                });
+                userStatusRef.onDisconnect().set({
+                    state: 'offline',
+                    lastSeen: Date.now()
+                });
+            }
+        });
 
         // -------------------- كائن UI --------------------
         const UI = {
@@ -594,12 +699,30 @@
                 document.getElementById('createUsername').value = '';
                 document.getElementById('createError').innerText = '';
             },
+            openCountersMenu() {
+                document.getElementById('countersMenu').classList.add('open');
+            },
+            closeCountersMenu() {
+                document.getElementById('countersMenu').classList.remove('open');
+            },
+            countersAction(action) {
+                alert(`قيد التطوير: ${action}`);
+                this.closeCountersMenu();
+            },
+            showSettings(type) {
+                if (type === 'counters') {
+                    this.openCountersMenu();
+                } else {
+                    alert(`إعدادات ${type} - قيد التطوير`);
+                }
+                this.closeDrawer();
+            },
             updateDrawerInfo() {
                 document.getElementById('drawerFullName').innerText = currentUser.fullName;
                 document.getElementById('drawerUsername').innerText = '@' + currentUser.username;
             },
             changePhoto() { alert('تغيير الصورة قيد التطوير'); },
-            editName() { 
+            editName() {
                 const newName = prompt('الاسم الجديد:', currentUser.fullName);
                 if (newName && newName.trim()) {
                     currentUser.fullName = newName.trim();
@@ -609,13 +732,15 @@
                 }
                 this.closeDrawer();
             },
-            editUsername() { alert('تغيير اسم المستخدم قيد التطوير'); },
+            editUsername() { alert('تغيير اسم المستخدم قيد التطوير'); this.closeDrawer(); },
             toggleDarkMode() { document.body.classList.toggle('dark-mode'); this.closeDrawer(); }
         };
 
         // -------------------- كائن Auth (تسجيل خروج) --------------------
         const Auth = {
             logout() {
+                // إزالة حالة الاتصال
+                userStatusRef.remove();
                 localStorage.removeItem('currentUser');
                 window.location.href = 'index.html';
             }
@@ -644,7 +769,15 @@
                     }
                 });
 
-                // 2. البحث عن القنوات والمجموعات
+                // 2. البحث عن بوت ffbot
+                if ('ffbot'.includes(query.toLowerCase())) {
+                    html += `<div class="search-result-item" onclick="Chat.startPrivate('ffbot', 'ffbot', 'ffbot')">
+                        <div class="chat-avatar" style="background: #ff9800;">🤖</div>
+                        <div><strong>ffbot</strong> <span style="background:#ffd700; padding:2px 6px; border-radius:12px; font-size:10px;">موثق</span><br><span style="color:#666;">@ffbot</span></div>
+                    </div>`;
+                }
+
+                // 3. البحث عن القنوات والمجموعات
                 const groupsSnap = await db.ref('groups').once('value');
                 groupsSnap.forEach(child => {
                     const g = child.val();
@@ -662,7 +795,7 @@
             }
         };
 
-        // -------------------- كائن GroupsAndChannels --------------------
+        // -------------------- كائن GroupsAndChannels (بدون تغيير) --------------------
         const GroupsAndChannels = {
             async create() {
                 const name = document.getElementById('createName').value.trim();
@@ -695,7 +828,6 @@
                     createdBy: currentUser.uid,
                     createdAt: Date.now(),
                     memberCount: 1,
-                    members: { [currentUser.uid]: { role: 'owner', joinedAt: Date.now() } }
                 };
                 await db.ref(`groups/${groupId}`).set(groupData);
                 await db.ref(`usernames/${username}`).set(groupId);
@@ -736,25 +868,101 @@
             }
         };
 
-        // -------------------- كائن Chat --------------------
+        // -------------------- كائن Chat (مطور بشكل كبير) --------------------
         const Chat = {
             currentChat: null,
             currentChatId: null,
             currentChatType: null, // 'private', 'group', 'channel'
             currentChatUser: null,
             messagesListener: null,
+            chatListListener: null,
+            presenceListeners: {},
 
-            startPrivate(uid, username, fullName) {
+            async startPrivate(uid, username, fullName) {
+                // إذا كان البوت
+                if (uid === 'ffbot') {
+                    this.startBotConversation();
+                    return;
+                }
+
                 this.currentChatType = 'private';
                 this.currentChatUser = { uid, username, fullName };
                 const ids = [currentUser.uid, uid].sort();
                 this.currentChatId = `private_${ids[0]}_${ids[1]}`;
-                this.openChatUI(fullName, fullName.charAt(0), '');
+                
+                // جلب حالة المستخدم
+                const statusSnap = await db.ref(`status/${uid}`).once('value');
+                const status = statusSnap.val();
+                let statusText = '';
+                if (status && status.state === 'online') {
+                    statusText = '🟢 متصل';
+                } else {
+                    const lastSeen = status ? status.lastSeen : null;
+                    if (lastSeen) {
+                        const timeAgo = this.timeAgo(lastSeen);
+                        statusText = `آخر ظهور ${timeAgo}`;
+                    } else {
+                        statusText = 'آخر ظهور غير معروف';
+                    }
+                }
+
+                this.openChatUI(fullName, fullName.charAt(0), statusText);
                 this.loadPrivateMessages(uid);
+                
+                // مراقبة تغير الحالة
+                this.presenceListeners[uid] = db.ref(`status/${uid}`).on('value', (snap) => {
+                    const s = snap.val();
+                    if (s && s.state === 'online') {
+                        document.getElementById('chatStatus').innerText = '🟢 متصل';
+                    } else {
+                        const lastSeen = s ? s.lastSeen : null;
+                        if (lastSeen) {
+                            document.getElementById('chatStatus').innerText = `آخر ظهور ${this.timeAgo(lastSeen)}`;
+                        } else {
+                            document.getElementById('chatStatus').innerText = 'آخر ظهور غير معروف';
+                        }
+                    }
+                });
+            },
+
+            timeAgo(timestamp) {
+                const seconds = Math.floor((Date.now() - timestamp) / 1000);
+                if (seconds < 60) return 'منذ لحظات';
+                const minutes = Math.floor(seconds / 60);
+                if (minutes < 60) return `منذ ${minutes} دقيقة`;
+                const hours = Math.floor(minutes / 60);
+                if (hours < 24) return `منذ ${hours} ساعة`;
+                const days = Math.floor(hours / 24);
+                return `منذ ${days} يوم`;
+            },
+
+            startBotConversation() {
+                this.currentChatType = 'bot';
+                this.currentChatId = `bot_${currentUser.uid}`;
+                this.currentChatUser = { uid: 'ffbot', username: 'ffbot', fullName: 'ffbot' };
+                this.openChatUI('ffbot', '🤖', '🟢 متصل');
+                
+                // عرض رسالة الترحيب
+                const container = document.getElementById('messagesContainer');
+                container.innerHTML = `
+                    <div class="message received bot-message">
+                        <div>👋 مرحباً! أنا بوت إنشاء البوتات.</div>
+                        <div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>
+                    </div>
+                    <div class="message received bot-message">
+                        <div>📝 أرسل /start لبدء إنشاء بوت جديد.</div>
+                        <div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>
+                    </div>
+                `;
+                
+                // إعداد مستمع للرسائل الواردة من المستخدم إلى البوت
+                this.botListener = db.ref(`botMessages/${currentUser.uid}`).on('value', (snap) => {
+                    // سيتم تنفيذ منطق البوت في sendMessage
+                });
             },
 
             openChatUI(name, avatarChar, status) {
-                document.getElementById('chatName').innerText = name;
+                document.getElementById('chatName').innerHTML = name + (name === 'ffbot' ? ' <span class="verified-badge">موثق</span>' : '');
                 document.getElementById('chatAvatar').innerText = avatarChar;
                 document.getElementById('chatStatus').innerText = status;
                 document.getElementById('chatRoom').classList.add('open');
@@ -763,6 +971,11 @@
             close() {
                 document.getElementById('chatRoom').classList.remove('open');
                 if (this.messagesListener) this.messagesListener.off();
+                // إزالة مستمعي الحضور
+                Object.keys(this.presenceListeners).forEach(uid => {
+                    db.ref(`status/${uid}`).off('value', this.presenceListeners[uid]);
+                });
+                this.presenceListeners = {};
                 this.messagesListener = null;
                 this.currentChat = null;
                 this.currentChatId = null;
@@ -814,6 +1027,13 @@
                 const text = input.value.trim();
                 if (!text || !this.currentChatId) return;
 
+                // إذا كان بوت
+                if (this.currentChatType === 'bot') {
+                    await this.handleBotMessage(text);
+                    input.value = '';
+                    return;
+                }
+
                 if (this.currentChatType === 'private') {
                     const msg = {
                         messageId: db.ref().push().key,
@@ -826,6 +1046,16 @@
                 } else {
                     // مجموعة أو قناة
                     const groupId = this.currentChatId.replace('group_','');
+                    const groupSnap = await db.ref(`groups/${groupId}`).once('value');
+                    const group = groupSnap.val();
+                    
+                    // التحقق من صلاحية النشر في القناة
+                    if (group.type === 'channel' && group.createdBy !== currentUser.uid) {
+                        alert('فقط المالك يمكنه النشر في القناة');
+                        input.value = '';
+                        return;
+                    }
+
                     const msg = {
                         messageId: db.ref().push().key,
                         senderId: currentUser.uid,
@@ -836,6 +1066,82 @@
                     await db.ref(`groupMessages/${groupId}/${msg.messageId}`).set(msg);
                 }
                 input.value = '';
+            },
+
+            // منطق البوت
+            async handleBotMessage(text) {
+                const botStateRef = db.ref(`botState/${currentUser.uid}`);
+                const stateSnap = await botStateRef.once('value');
+                let state = stateSnap.val() || { step: 'idle' };
+
+                let reply = '';
+
+                if (text === '/start') {
+                    state = { step: 'awaiting_name' };
+                    reply = '🤖 مرحباً! لنبدأ إنشاء بوت جديد.\nالرجاء إرسال الاسم الذي تريده للبوت:';
+                } else if (state.step === 'awaiting_name') {
+                    state = { step: 'awaiting_username', name: text };
+                    reply = `الاسم "${text}" تم حفظه.\nالآن أرسل اسم المستخدم للبوت (يجب أن ينتهي بـ "bot"):`;
+                } else if (state.step === 'awaiting_username') {
+                    const username = text;
+                    if (!username.endsWith('bot')) {
+                        reply = '❌ اسم المستخدم يجب أن ينتهي بـ "bot". حاول مرة أخرى:';
+                    } else if (!/^[A-Za-z][A-Za-z0-9_]{4,19}$/.test(username)) {
+                        reply = '❌ اسم المستخدم غير صالح (5-20 حرف، يبدأ بحرف). حاول مرة أخرى:';
+                    } else {
+                        // التحقق من عدم وجود اسم المستخدم
+                        const check = await db.ref('usernames').child(username).once('value');
+                        if (check.exists()) {
+                            reply = '❌ اسم المستخدم مستخدم بالفعل. اختر اسماً آخر:';
+                        } else {
+                            // إنشاء توكن عشوائي
+                            const token = this.generateToken();
+                            reply = `✅ تم إنشاء البوت بنجاح!\nالاسم: ${state.name}\nاسم المستخدم: @${username}\nالتوكن: ${token}\n\nاحتفظ بهذا التوكن لاستخدام البوت.`;
+                            // حفظ البوت في قاعدة البيانات (اختياري)
+                            await db.ref(`bots/${username}`).set({
+                                name: state.name,
+                                username,
+                                token,
+                                owner: currentUser.uid,
+                                createdAt: Date.now()
+                            });
+                            await db.ref(`usernames/${username}`).set('bot_' + username);
+                            state = { step: 'idle' };
+                        }
+                    }
+                } else {
+                    state = { step: 'awaiting_name' };
+                    reply = '👋 أرسل /start لبدء إنشاء بوت جديد.';
+                }
+
+                await botStateRef.set(state);
+
+                // إرسال رد البوت
+                const botMsg = {
+                    messageId: db.ref().push().key,
+                    senderId: 'ffbot',
+                    receiverId: currentUser.uid,
+                    text: reply,
+                    timestamp: Date.now()
+                };
+                await db.ref(`messages/bot_${currentUser.uid}/${botMsg.messageId}`).set(botMsg);
+
+                // تحديث واجهة الدردشة
+                const container = document.getElementById('messagesContainer');
+                const div = document.createElement('div');
+                div.className = 'message received bot-message';
+                div.innerHTML = `<div>${reply}</div><div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>`;
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+            },
+
+            generateToken() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let token = '';
+                for (let i = 0; i < 32; i++) {
+                    token += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return token;
             },
 
             banUser() {
@@ -850,45 +1156,69 @@
             }
         };
 
-        // -------------------- تهيئة التطبيق --------------------
-        function init() {
-            UI.updateDrawerInfo();
-            loadChatList();
-        }
+        // -------------------- تحميل قائمة المحادثات (مع بقائها) --------------------
+        let chatListListener = null;
 
-        // تحميل قائمة المحادثات (آخر الرسائل)
-        async function loadChatList() {
-            const container = document.getElementById('chatListContainer');
+        function loadChatList() {
+            if (chatListListener) chatListListener.off();
+            
             const conversations = new Map();
+            const uid = currentUser.uid;
 
             // 1. المحادثات الخاصة
-            const msgsSnap = await db.ref('messages').once('value');
-            msgsSnap.forEach(chatSnap => {
-                const msgs = chatSnap.val();
-                Object.values(msgs).forEach(msg => {
-                    if (msg.senderId === currentUser.uid || msg.receiverId === currentUser.uid) {
-                        const otherId = msg.senderId === currentUser.uid ? msg.receiverId : msg.senderId;
-                        if (!conversations.has(otherId) || conversations.get(otherId).timestamp < msg.timestamp) {
-                            conversations.set(otherId, { id: otherId, type: 'user', lastMessage: msg.text, timestamp: msg.timestamp });
-                        }
+            chatListListener = db.ref('messages').on('value', async (snapshot) => {
+                // إعادة تعيين الخريطة في كل تحديث
+                conversations.clear();
+
+                snapshot.forEach(chatSnap => {
+                    const chatId = chatSnap.key;
+                    const msgs = chatSnap.val();
+                    if (msgs && typeof msgs === 'object') {
+                        Object.values(msgs).forEach(msg => {
+                            if (msg.senderId === uid || msg.receiverId === uid) {
+                                const otherId = msg.senderId === uid ? msg.receiverId : msg.senderId;
+                                if (!conversations.has(otherId) || conversations.get(otherId).timestamp < msg.timestamp) {
+                                    conversations.set(otherId, {
+                                        id: otherId,
+                                        type: 'user',
+                                        lastMessage: msg.text,
+                                        timestamp: msg.timestamp,
+                                        unread: false
+                                    });
+                                }
+                            }
+                        });
                     }
                 });
-            });
 
-            // 2. المجموعات التي هو عضو فيها
-            const memberSnap = await db.ref('groupMembers').orderByChild('uid').equalTo(currentUser.uid).once('value');
-            memberSnap.forEach(member => {
-                const groupId = member.key;
-                // نأخذ آخر رسالة من المجموعة
-                db.ref(`groupMessages/${groupId}`).orderByChild('timestamp').limitToLast(1).once('value', snap => {
-                    let lastMsg = 'أنشئت حديثاً', lastTime = Date.now();
-                    snap.forEach(m => { lastMsg = m.val().text; lastTime = m.val().timestamp; });
-                    conversations.set(`group_${groupId}`, { id: groupId, type: 'group', lastMessage: lastMsg, timestamp: lastTime });
-                    renderChatList(Array.from(conversations.values()));
+                // 2. المجموعات التي هو عضو فيها
+                const memberSnap = await db.ref('groupMembers').orderByChild('uid').equalTo(uid).once('value');
+                memberSnap.forEach(member => {
+                    const groupId = member.key;
+                    // نأخذ آخر رسالة من المجموعة
+                    db.ref(`groupMessages/${groupId}`).orderByChild('timestamp').limitToLast(1).once('value', snap => {
+                        let lastMsg = 'أنشئت حديثاً', lastTime = Date.now();
+                        snap.forEach(m => { lastMsg = m.val().text; lastTime = m.val().timestamp; });
+                        conversations.set(`group_${groupId}`, {
+                            id: groupId,
+                            type: 'group',
+                            lastMessage: lastMsg,
+                            timestamp: lastTime
+                        });
+                        renderChatList(Array.from(conversations.values()));
+                    });
                 });
-            });
 
-            renderChatList(Array.from(conversations.values()));
+                // 3. بوت ffbot (ثابت)
+                conversations.set('ffbot', {
+                    id: 'ffbot',
+                    type: 'bot',
+                    lastMessage: 'بوت إنشاء البوتات',
+                    timestamp: Date.now()
+                });
+
+                renderChatList(Array.from(conversations.values()));
+            });
         }
 
         async function renderChatList(list) {
@@ -905,13 +1235,22 @@
                     if (!userSnap.exists()) continue;
                     let user;
                     userSnap.forEach(u => user = u.val());
-                    div.innerHTML = `<div class="chat-avatar">${user.fullName.charAt(0)}</div>
+                    
+                    // جلب حالة الاتصال
+                    const statusSnap = await db.ref(`status/${user.uid}`).once('value');
+                    const status = statusSnap.val();
+                    const isOnline = status && status.state === 'online';
+                    
+                    div.innerHTML = `<div class="chat-avatar" style="position:relative;">
+                            ${user.fullName.charAt(0)}
+                            <span class="${isOnline ? 'online-indicator' : 'offline-indicator'}"></span>
+                        </div>
                         <div class="chat-info">
                             <div class="chat-name"><span>${user.fullName}</span><span class="chat-time">${new Date(item.timestamp).toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})}</span></div>
                             <div class="chat-last-msg">${item.lastMessage}</div>
                         </div>`;
                     div.onclick = () => Chat.startPrivate(user.uid, user.username, user.fullName);
-                } else {
+                } else if (item.type === 'group') {
                     const groupSnap = await db.ref(`groups/${item.id}`).once('value');
                     const group = groupSnap.val();
                     if (!group) continue;
@@ -921,16 +1260,25 @@
                             <div class="chat-last-msg">${item.lastMessage}</div>
                         </div>`;
                     div.onclick = () => GroupsAndChannels.open(group.id);
+                } else if (item.type === 'bot') {
+                    div.innerHTML = `<div class="chat-avatar" style="background:#ff9800;">🤖</div>
+                        <div class="chat-info">
+                            <div class="chat-name"><span>ffbot <span style="background:#ffd700; padding:2px 6px; border-radius:12px; font-size:10px;">موثق</span></span><span class="chat-time"></span></div>
+                            <div class="chat-last-msg">بوت إنشاء البوتات</div>
+                        </div>`;
+                    div.onclick = () => Chat.startPrivate('ffbot', 'ffbot', 'ffbot');
                 }
                 container.appendChild(div);
             }
             if (list.length === 0) container.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">لا توجد محادثات بعد</div>';
         }
 
+        // -------------------- تهيئة التطبيق --------------------
+        function init() {
+            UI.updateDrawerInfo();
+            loadChatList();
+        }
         init();
-            
+    </script>
 </body>
 </html>
-
-
-
