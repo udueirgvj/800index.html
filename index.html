@@ -8,12 +8,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <!-- CSS (التصميم القديم) -->
+    <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="app">
-        <!-- ===== صفحة تسجيل الدخول (واحدة فقط) ===== -->
+        <!-- صفحة تسجيل الدخول -->
         <div id="authContainer" class="auth-container">
             <div id="loginContainer" class="auth-box">
                 <div style="text-align: center; margin-bottom: 25px;">
@@ -27,7 +27,7 @@
                 <button class="link-btn" onclick="UI.showSignup()">إنشاء حساب</button>
             </div>
 
-            <!-- إنشاء حساب (يظهر فقط عند الضغط على إنشاء حساب) -->
+            <!-- إنشاء حساب -->
             <div id="signupContainer" class="auth-box hidden">
                 <div style="text-align: right; margin-bottom: 15px;">
                     <span style="font-size: 14px; color: #667eea; cursor: pointer;" onclick="UI.showLogin()">تسجيل الدخول</span>
@@ -45,7 +45,7 @@
                 <button onclick="handleSignUp()">التسجيل</button>
             </div>
 
-            <!-- تحقق البريد (يظهر بعد التسجيل) -->
+            <!-- تحقق البريد -->
             <div id="verificationContainer" class="auth-box hidden">
                 <div style="text-align: center;">
                     <h2 style="color: #27ae60; margin-bottom: 20px;">📧 تحقق من بريدك</h2>
@@ -56,22 +56,19 @@
             </div>
         </div>
 
-        <!-- ===== صفحة التطبيق الرئيسية (تظهر فقط بعد تسجيل الدخول) ===== -->
+        <!-- صفحة التطبيق الرئيسية -->
         <div id="mainApp" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
-            <!-- الشريط العلوي -->
             <div class="top-bar">
                 <div class="menu-icon" onclick="UI.toggleDrawer()">☰</div>
                 <div class="app-name">تلرفيب</div>
                 <div class="search-icon" onclick="UI.toggleSearch()">🔍</div>
             </div>
 
-            <!-- شريط البحث -->
             <div id="searchBar" class="search-bar">
                 <input type="text" id="searchInput" placeholder="ابحث عن مستخدم أو قناة..." onkeyup="Chat.searchAll()">
                 <div id="searchResults" class="search-results"></div>
             </div>
 
-            <!-- القائمة الجانبية (الإعدادات) -->
             <div id="drawerOverlay" class="drawer-overlay" onclick="UI.closeDrawer()"></div>
             <div id="drawer" class="drawer">
                 <div class="drawer-header">
@@ -101,9 +98,8 @@
                 </div>
             </div>
 
-            <!-- المحتوى الرئيسي (قناة المطور + قائمة المحادثات) -->
             <div id="mainContent" class="main-content">
-                <!-- قناة المطور (تصميم قديم) -->
+                <!-- قناة المطور بالتصميم القديم -->
                 <div class="channel-card" onclick="Channel.openChannelChat()">
                     <div class="channel-icon">📢</div>
                     <div class="channel-text">
@@ -112,8 +108,6 @@
                     </div>
                     <div style="background: #f0f0f0; color: #667eea; padding: 4px 12px; border-radius: 16px; font-size: 12px;">700K+</div>
                 </div>
-
-                <!-- قائمة المحادثات -->
                 <div id="chatListContainer" class="chat-list"></div>
             </div>
 
@@ -124,9 +118,7 @@
                     <div id="chatAvatar" class="chat-avatar" style="width: 40px; height: 40px;">👤</div>
                     <div class="chat-header-info">
                         <div id="chatName" class="chat-header-name">...</div>
-                        <div id="chatStatus" class="chat-header-status">
-                            <span id="memberCountDisplay"></span>
-                        </div>
+                        <div id="chatStatus" class="chat-header-status"><span id="memberCountDisplay"></span></div>
                     </div>
                 </div>
                 <div id="messagesContainer" class="messages-container"></div>
@@ -177,7 +169,7 @@
         </div>
     </div>
 
-    <!-- ملفات الجافاسكريبت (لا تغيرها نهائياً) -->
+    <!-- ملفات JS (لا تلمسها) -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/chat.js"></script>
