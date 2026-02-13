@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تلرفيب - دخول</title>
+    <title>تلرفيب - تسجيل الدخول</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui; }
         body { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); display:flex; align-items:center; justify-content:center; min-height:100vh; }
@@ -20,7 +20,7 @@
     </style>
 </head>
 <body>
-    <!-- تسجيل الدخول -->
+    <!-- صفحة تسجيل الدخول -->
     <div class="box" id="loginBox">
         <h1>تلرفيب</h1>
         <p>مرحباً بكم في تلرفيب</p>
@@ -31,7 +31,7 @@
         <button class="link-btn" onclick="showSignup()">إنشاء حساب</button>
     </div>
 
-    <!-- إنشاء حساب -->
+    <!-- صفحة إنشاء حساب -->
     <div class="box hidden" id="signupBox">
         <h2>إنشاء حساب</h2>
         <input type="text" id="signupName" placeholder="الاسم الشخصي">
@@ -45,7 +45,7 @@
     </div>
 
     <script>
-        // عرض/إخفاء الشاشات
+        // التبديل بين الشاشتين
         function showLogin() {
             document.getElementById('loginBox').classList.remove('hidden');
             document.getElementById('signupBox').classList.add('hidden');
@@ -60,22 +60,24 @@
             return /^[A-Za-z0-9_]{5,}$/.test(u);
         }
 
-        // تسجيل جديد
+        // وظيفة التسجيل
         function doSignup() {
             const name = document.getElementById('signupName').value.trim();
             const user = document.getElementById('signupUser').value.trim();
             const pass = document.getElementById('signupPass').value.trim();
             const conf = document.getElementById('signupConfirm').value.trim();
 
+            // مسح الأخطاء السابقة
             document.getElementById('signupError').innerText = '';
             document.getElementById('signupSuccess').innerText = '';
 
+            // التحقق من المدخلات
             if (!name || !user || !pass || !conf) {
                 document.getElementById('signupError').innerText = 'املأ جميع الحقول';
                 return;
             }
             if (!isValidUser(user)) {
-                document.getElementById('signupError').innerText = 'اسم المستخدم: 5 أحرف إنجليزية أو أرقام';
+                document.getElementById('signupError').innerText = 'اسم المستخدم: 5 أحرف إنجليزية أو أرقام فقط';
                 return;
             }
             if (pass.length < 6) {
@@ -87,8 +89,10 @@
                 return;
             }
 
-            // جلب المستخدمين المخزنين من localStorage
+            // جلب قائمة المستخدمين من localStorage
             let users = JSON.parse(localStorage.getItem('users') || '[]');
+
+            // التحقق من عدم تكرار اسم المستخدم
             if (users.find(u => u.username === user)) {
                 document.getElementById('signupError').innerText = 'اسم المستخدم موجود بالفعل';
                 return;
@@ -96,26 +100,29 @@
 
             // إنشاء مستخدم جديد
             const newUser = {
-                uid: Date.now().toString(), // معرف فريد
+                uid: Date.now().toString(),
                 fullName: name,
                 username: user,
-                password: pass, // في التطبيق الحقيقي يجب تشفير كلمة المرور
+                password: pass,
                 createdAt: new Date().toISOString()
             };
+
             users.push(newUser);
             localStorage.setItem('users', JSON.stringify(users));
 
-            // تسجيل الدخول مباشرة
+            // تسجيل الدخول تلقائياً بعد التسجيل
             localStorage.setItem('currentUser', JSON.stringify(newUser));
 
-            // إظهار رسالة النجاح والتوجيه
+            // إظهار رسالة النجاح
             document.getElementById('signupSuccess').innerText = 'تم التسجيل! جاري التحويل...';
+
+            // التوجيه إلى app.html بعد 1.5 ثانية
             setTimeout(() => {
                 window.location.href = 'app.html';
             }, 1500);
         }
 
-        // تسجيل الدخول
+        // وظيفة تسجيل الدخول
         function doLogin() {
             const user = document.getElementById('loginUser').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
@@ -137,7 +144,7 @@
             window.location.href = 'app.html';
         }
 
-        // إذا كان هناك مستخدم مخزن بالفعل، انتقل إلى التطبيق مباشرة
+        // إذا كان هناك مستخدم مخزن بالفعل، انتقل مباشرة إلى التطبيق
         if (localStorage.getItem('currentUser')) {
             window.location.href = 'app.html';
         }
