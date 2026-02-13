@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تلرفيب - العدادات</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .stats-container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 16px;
+        }
+        .stat-value {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 20px;
+        }
+        .button-close {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .button-close:hover {
+            background: #5a67d8;
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-container">
+        <h2>📊 العدادات</h2>
+        <div class="stat-item">
+            <span class="stat-label">عدد المستخدمين</span>
+            <span class="stat-value" id="userCount">جاري التحميل...</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">عدد القنوات</span>
+            <span class="stat-value" id="channelCount">جاري التحميل...</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">عدد المجموعات</span>
+            <span class="stat-value" id="groupCount">جاري التحميل...</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">إجمالي الرسائل</span>
+            <span class="stat-value" id="messageCount">جاري التحميل...</span>
+        </div>
+        <button class="button-close" onclick="window.close()">إغلاق</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79N0",
+            authDomain: "tttrt-b8c5a.firebaseapp.com",
+            databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "tttrt-b8c5a",
+            storageBucket: "tttrt-b8c5a.appspot.com",
+            messagingSenderId: "975123752593",
+            appId: "1:975123752593:web:e591e930af101968875560"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        async function loadStats() {
+            // عدد المستخدمين
+            const usersSnap = await db.ref('users').once('value');
+            document.getElementById('userCount').innerText = usersSnap.numChildren();
+
+            // عدد القنوات والمجموعات
+            const groupsSnap = await db.ref('groups').once('value');
+            let channels = 0, groups = 0;
+            groupsSnap.forEach(child => {
+                const g = child.val();
+                if (g.type === 'channel') channels++;
+                else if (g.type === 'group') groups++;
+            });
+            document.getElementById('channelCount').innerText = channels;
+            document.getElementById('groupCount').innerText = groups;
+
+            // إجمالي الرسائل (تقريبي: عدد المفاتيح في messages + groupMessages)
+            const msgsSnap = await db.ref('messages').once('value');
+            let msgCount = 0;
+            msgsSnap.forEach(chat => msgCount += chat.numChildren());
+            const groupMsgsSnap = await db.ref('groupMessages').once('value');
+            groupMsgsSnap.forEach(chat => msgCount += chat.numChildren());
+            document.getElementById('messageCount').innerText = msgCount;
+        }
+        loadStats();
+    </script>
+</body>
+</html>
