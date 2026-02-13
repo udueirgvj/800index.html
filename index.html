@@ -2,304 +2,145 @@
 <html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تلرفيب - تسجيل الدخول</title>
-    <!-- Firebase SDK (نسخة 8.10.1) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تلرفيب - دخول</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 0;
-            margin: 0;
-        }
-        #app {
-            width: 100%;
-            max-width: 500px;
-            height: 700px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        .auth-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .auth-box {
-            width: 100%;
-            max-width: 350px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        }
-        .auth-box h2 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 25px;
-            font-size: 24px;
-        }
-        .auth-box input {
-            width: 100%;
-            padding: 12px 15px;
-            margin: 8px 0;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            font-size: 15px;
-            transition: 0.2s;
-        }
-        .auth-box input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-            outline: none;
-        }
-        .auth-box button {
-            width: 100%;
-            padding: 12px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: 0.2s;
-        }
-        .auth-box button:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-        }
-        .link-btn {
-            background: transparent !important;
-            color: #667eea !important;
-            border: 1px solid #667eea !important;
-            margin-top: 10px;
-        }
-        .link-btn:hover {
-            background: #f0f3ff !important;
-            transform: none !important;
-        }
-        .hidden {
-            display: none !important;
-        }
-        .error {
-            color: #e74c3c;
-            font-size: 13px;
-            margin: 5px 0;
-            text-align: right;
-        }
-        .success {
-            color: #27ae60;
-            font-size: 13px;
-            margin: 5px 0;
-        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui; }
+        body { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); display:flex; align-items:center; justify-content:center; min-height:100vh; }
+        .box { background:white; padding:2rem; border-radius:20px; width:90%; max-width:400px; box-shadow:0 20px 40px rgba(0,0,0,0.2); }
+        h1 { color:#667eea; text-align:center; margin-bottom:0.5rem; }
+        p { color:#666; text-align:center; margin-bottom:2rem; }
+        input { width:100%; padding:12px; margin:8px 0; border:1px solid #ddd; border-radius:10px; font-size:16px; }
+        button { width:100%; padding:12px; background:#667eea; color:white; border:none; border-radius:10px; font-size:16px; cursor:pointer; margin-top:10px; }
+        button:hover { background:#5a67d8; }
+        .link-btn { background:transparent; color:#667eea; border:1px solid #667eea; margin-top:10px; }
+        .hidden { display:none; }
+        .error { color:#e74c3c; font-size:14px; margin:5px 0; }
+        .success { color:#27ae60; }
     </style>
 </head>
 <body>
-    <div id="app">
-        <div id="authContainer" class="auth-container">
-            <!-- تسجيل الدخول -->
-            <div id="loginContainer" class="auth-box">
-                <div style="text-align: center; margin-bottom: 25px;">
-                    <h1 style="color: #667eea; font-size: 40px; margin-bottom: 5px;">تلرفيب</h1>
-                    <p style="color: #666;">مرحباً بكم في تلرفيب</p>
-                </div>
-                <input type="text" id="loginUsername" placeholder="اسم المستخدم">
-                <input type="password" id="loginPassword" placeholder="كلمة المرور">
-                <div id="loginError" class="error"></div>
-                <button onclick="handleLogin()">دخول</button>
-                <button class="link-btn" onclick="showSignup()">إنشاء حساب</button>
-            </div>
+    <!-- تسجيل الدخول -->
+    <div class="box" id="loginBox">
+        <h1>تلرفيب</h1>
+        <p>مرحباً بكم في تلرفيب</p>
+        <input type="text" id="loginUser" placeholder="اسم المستخدم">
+        <input type="password" id="loginPass" placeholder="كلمة المرور">
+        <div class="error" id="loginError"></div>
+        <button onclick="doLogin()">دخول</button>
+        <button class="link-btn" onclick="showSignup()">إنشاء حساب</button>
+    </div>
 
-            <!-- إنشاء حساب (يحتوي على جميع الحقول) -->
-            <div id="signupContainer" class="auth-box hidden">
-                <h2>📝 إنشاء حساب</h2>
-                <input type="text" id="signupFullname" placeholder="الاسم الشخصي">
-                <input type="text" id="signupUsername" placeholder="اسم المستخدم (5 أحرف إنجليزية على الأقل)">
-                <input type="email" id="signupEmail" placeholder="البريد الإلكتروني (اختياري)">
-                <input type="password" id="signupPassword" placeholder="كلمة المرور">
-                <input type="password" id="signupConfirm" placeholder="تأكيد كلمة المرور">
-                <div id="signupError" class="error"></div>
-                <div id="signupSuccess" class="success"></div>
-                <button onclick="handleSignUp()">تسجيل</button>
-                <button class="link-btn" onclick="showLogin()">لديك حساب؟ سجل دخولك</button>
-            </div>
-        </div>
+    <!-- إنشاء حساب -->
+    <div class="box hidden" id="signupBox">
+        <h2>إنشاء حساب</h2>
+        <input type="text" id="signupName" placeholder="الاسم الشخصي">
+        <input type="text" id="signupUser" placeholder="اسم المستخدم (5 أحرف فأكثر)">
+        <input type="password" id="signupPass" placeholder="كلمة المرور">
+        <input type="password" id="signupConfirm" placeholder="تأكيد كلمة المرور">
+        <div class="error" id="signupError"></div>
+        <div class="success" id="signupSuccess"></div>
+        <button onclick="doSignup()">تسجيل</button>
+        <button class="link-btn" onclick="showLogin()">لديك حساب؟</button>
     </div>
 
     <script>
-        // -------------------- Firebase --------------------
-        const firebaseConfig = {
-            apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79N0",
-            authDomain: "tttrt-b8c5a.firebaseapp.com",
-            databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "tttrt-b8c5a",
-            storageBucket: "tttrt-b8c5a.appspot.com",
-            messagingSenderId: "975123752593",
-            appId: "1:975123752593:web:e591e930af101968875560"
-        };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        // -------------------- دوال العرض --------------------
+        // عرض/إخفاء الشاشات
         function showLogin() {
-            document.getElementById('loginContainer').classList.remove('hidden');
-            document.getElementById('signupContainer').classList.add('hidden');
+            document.getElementById('loginBox').classList.remove('hidden');
+            document.getElementById('signupBox').classList.add('hidden');
         }
         function showSignup() {
-            document.getElementById('loginContainer').classList.add('hidden');
-            document.getElementById('signupContainer').classList.remove('hidden');
+            document.getElementById('loginBox').classList.add('hidden');
+            document.getElementById('signupBox').classList.remove('hidden');
         }
 
-        // التحقق من اسم المستخدم (إنجليزي وأرقام فقط، 5 أحرف على الأقل)
-        function isValidUsername(username) {
-            return /^[A-Za-z0-9_]{5,}$/.test(username);
+        // التحقق من اسم المستخدم (إنجليزي وأرقام فقط، 5 أحرف فأكثر)
+        function isValidUser(u) {
+            return /^[A-Za-z0-9_]{5,}$/.test(u);
         }
 
-        // إنشاء حساب جديد
-        async function handleSignUp() {
-            const fullName = document.getElementById('signupFullname').value.trim();
-            const username = document.getElementById('signupUsername').value.trim();
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value.trim();
-            const confirm = document.getElementById('signupConfirm').value.trim();
+        // تسجيل جديد
+        function doSignup() {
+            const name = document.getElementById('signupName').value.trim();
+            const user = document.getElementById('signupUser').value.trim();
+            const pass = document.getElementById('signupPass').value.trim();
+            const conf = document.getElementById('signupConfirm').value.trim();
 
-            // تفريغ الأخطاء
             document.getElementById('signupError').innerText = '';
             document.getElementById('signupSuccess').innerText = '';
 
-            // التحقق من الحقول
-            if (!fullName || !username || !password || !confirm) {
-                document.getElementById('signupError').innerText = 'جميع الحقول مطلوبة';
+            if (!name || !user || !pass || !conf) {
+                document.getElementById('signupError').innerText = 'املأ جميع الحقول';
                 return;
             }
-            if (!isValidUsername(username)) {
-                document.getElementById('signupError').innerText = 'اسم المستخدم: 5 أحرف إنجليزية أو أرقام على الأقل';
+            if (!isValidUser(user)) {
+                document.getElementById('signupError').innerText = 'اسم المستخدم: 5 أحرف إنجليزية أو أرقام';
                 return;
             }
-            if (password.length < 6) {
+            if (pass.length < 6) {
                 document.getElementById('signupError').innerText = 'كلمة المرور 6 أحرف على الأقل';
                 return;
             }
-            if (password !== confirm) {
+            if (pass !== conf) {
                 document.getElementById('signupError').innerText = 'كلمة المرور غير متطابقة';
                 return;
             }
 
-            try {
-                // التحقق من عدم تكرار اسم المستخدم
-                const snapshot = await db.ref('users').orderByChild('username').equalTo(username).once('value');
-                if (snapshot.exists()) {
-                    document.getElementById('signupError').innerText = 'اسم المستخدم موجود بالفعل';
-                    return;
-                }
-
-                // إنشاء معرف فريد
-                const newUserRef = db.ref('users').push();
-                const uid = newUserRef.key;
-                const userData = {
-                    uid: uid,
-                    fullName: fullName,
-                    username: username,
-                    email: email,
-                    password: password,  // نص عادي (يمكنك تشفيره لاحقاً)
-                    photoURL: '',
-                    bio: '',
-                    createdAt: new Date().toISOString(),
-                    lastLogin: new Date().toISOString()
-                };
-
-                await newUserRef.set(userData);
-                // حفظ اسم المستخدم لضمان الفريدة
-                await db.ref(`usernames/${username}`).set(uid);
-
-                // حفظ بيانات المستخدم في localStorage
-                localStorage.setItem('currentUser', JSON.stringify(userData));
-
-                // إظهار رسالة نجاح ثم التوجيه إلى التطبيق
-                document.getElementById('signupSuccess').innerText = 'تم إنشاء الحساب! جاري تحويلك...';
-                setTimeout(() => {
-                    window.location.href = 'app.html';
-                }, 1500);
-            } catch (error) {
-                console.error(error);
-                document.getElementById('signupError').innerText = 'حدث خطأ، حاول مرة أخرى';
-            }
-        }
-
-        // تسجيل الدخول
-        async function handleLogin() {
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value.trim();
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.innerText = '';
-
-            if (!username || !password) {
-                errorDiv.innerText = 'أدخل اسم المستخدم وكلمة المرور';
+            // جلب المستخدمين المخزنين من localStorage
+            let users = JSON.parse(localStorage.getItem('users') || '[]');
+            if (users.find(u => u.username === user)) {
+                document.getElementById('signupError').innerText = 'اسم المستخدم موجود بالفعل';
                 return;
             }
 
-            try {
-                const snapshot = await db.ref('users').orderByChild('username').equalTo(username).once('value');
-                if (!snapshot.exists()) {
-                    errorDiv.innerText = 'المستخدم غير موجود';
-                    return;
-                }
+            // إنشاء مستخدم جديد
+            const newUser = {
+                uid: Date.now().toString(), // معرف فريد
+                fullName: name,
+                username: user,
+                password: pass, // في التطبيق الحقيقي يجب تشفير كلمة المرور
+                createdAt: new Date().toISOString()
+            };
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
 
-                let userData;
-                snapshot.forEach(child => userData = child.val());
+            // تسجيل الدخول مباشرة
+            localStorage.setItem('currentUser', JSON.stringify(newUser));
 
-                if (userData.password !== password) {
-                    errorDiv.innerText = 'كلمة المرور غير صحيحة';
-                    return;
-                }
-
-                // تحديث آخر دخول
-                await db.ref(`users/${userData.uid}/lastLogin`).set(new Date().toISOString());
-
-                // حفظ في localStorage
-                localStorage.setItem('currentUser', JSON.stringify(userData));
-
-                // التوجيه إلى التطبيق
+            // إظهار رسالة النجاح والتوجيه
+            document.getElementById('signupSuccess').innerText = 'تم التسجيل! جاري التحويل...';
+            setTimeout(() => {
                 window.location.href = 'app.html';
-            } catch (error) {
-                console.error(error);
-                errorDiv.innerText = 'خطأ في تسجيل الدخول';
+            }, 1500);
+        }
+
+        // تسجيل الدخول
+        function doLogin() {
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            document.getElementById('loginError').innerText = '';
+
+            if (!user || !pass) {
+                document.getElementById('loginError').innerText = 'أدخل اسم المستخدم وكلمة المرور';
+                return;
             }
+
+            let users = JSON.parse(localStorage.getItem('users') || '[]');
+            const found = users.find(u => u.username === user && u.password === pass);
+            if (!found) {
+                document.getElementById('loginError').innerText = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+                return;
+            }
+
+            localStorage.setItem('currentUser', JSON.stringify(found));
+            window.location.href = 'app.html';
         }
 
         // إذا كان هناك مستخدم مخزن بالفعل، انتقل إلى التطبيق مباشرة
-        (function() {
-            const saved = localStorage.getItem('currentUser');
-            if (saved) {
-                window.location.href = 'app.html';
-            }
-        })();
+        if (localStorage.getItem('currentUser')) {
+            window.location.href = 'app.html';
+        }
     </script>
 </body>
 </html>
