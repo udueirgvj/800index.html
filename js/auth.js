@@ -1,164 +1,164 @@
-// ========== نظام المصادقة ==========
+// ========== نظام المصادقة المتطور ==========
 const Auth = {
     // المستخدم الحالي
     currentUser: null,
 
     // التحقق من صحة اسم المستخدم
     isValidUsername(username) {
-        return /^[A-Za-z0-9_]{5,}$/.test(username);
+        // 5-10 أحرف، إنجليزي وأرقام فقط، لا يبدأ برقم
+        const regex = /^[A-Za-z][A-Za-z0-9]{4,9}$/;
+        return regex.test(username);
+    },
+
+    // التحقق من عدم تكرار اسم المستخدم
+    async isUsernameAvailable(username) {
+        const snapshot = await db.ref('usernames').child(username).once('value');
+        return !snapshot.exists();
     },
 
     // إنشاء حساب جديد
-    async signUp() {
-        const fullName = document.getElementById('signupFullname').value.trim();
-        const username = document.getElementById('signupUsername').value.trim();
-        const password = document.getElementById('signupPassword').value.trim();
-        const confirm = document.getElementById('signupConfirm').value.trim();
-
-        document.getElementById('signupError').innerText = '';
-        document.getElementById('signupSuccess').innerText = '';
-
-        if (!fullName || !username || !password || !confirm) {
-            document.getElementById('signupError').innerText = 'جميع الحقول مطلوبة';
-            return;
+    async signUp(email, password, fullName, username) {
+        // التحقق من المدخلات
+        if (!email || !password || !fullName || !username) {
+            throw new Error('جميع الحقول مطلوبة');
         }
+
         if (!this.isValidUsername(username)) {
-            document.getElementById('signupError').innerText = 'اسم المستخدم: 5 أحرف إنجليزية أو أرقام على الأقل';
-            return;
+            throw new Error('اسم المستخدم: 5-10 أحرف إنجليزية، لا يبدأ برقم');
         }
+
         if (password.length < 6) {
-            document.getElementById('signupError').innerText = 'كلمة المرور 6 أحرف على الأقل';
-            return;
+            throw new Error('كلمة المرور 6 أحرف على الأقل');
         }
-        if (password !== confirm) {
-            document.getElementById('signupError').innerText = 'كلمة المرور غير متطابقة';
-            return;
+
+        // التحقق من توفر اسم المستخدم
+        const available = await this.isUsernameAvailable(username);
+        if (!available) {
+            throw new Error('اسم المستخدم غير متاح');
         }
 
         try {
-            const snapshot = await db.ref('users').orderByChild('username').equalTo(username).once('value');
-            if (snapshot.exists()) {
-                document.getElementById('signupError').innerText = 'اسم المستخدم موجود بالفعل';
-                return;
-            }
+            // 1. إنشاء المستخدم في Firebase Authentication
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
 
-            const newUserRef = db.ref('users').push();
-            const uid = newUserRef.key;
+            // 2. إرسال بريد التحقق
+            await user.sendEmailVerification();
+
+            // 3. حفظ بيانات المستخدم في Realtime Database
             const userData = {
-                uid,
-                fullName,
-                username,
-                password,
-                bio: '',
+                uid: user.uid,
+                email: email,
+                fullName: fullName,
+                username: username,
                 photoURL: '',
-                email: '',
-                subscribedChannel: false,
-                createdAt: new Date().toISOString()
+                bio: '',
+                emailVerified: false,
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString()
             };
 
-            await newUserRef.set(userData);
+            await db.ref(`users/${user.uid}`).set(userData);
+            
+            // 4. حفظ اسم المستخدم في مسار منفصل لضمان الفريدة
+            await db.ref(`usernames/${username}`).set(user.uid);
 
-            this.currentUser = { 
-                uid, 
-                username, 
-                fullName, 
-                photoURL: '', 
-                bio: '', 
-                email: '',
-                subscribedChannel: false 
+            // 5. تسجيل الخروج فوراً حتى يفعل البريد
+            await auth.signOut();
+
+            return {
+                success: true,
+                message: 'تم إنشاء الحساب. الرجاء تفعيل البريد الإلكتروني',
+                email: email
             };
-            localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
 
-            document.getElementById('signupSuccess').innerText = 'تم إنشاء الحساب! جاري التحويل...';
-            setTimeout(() => {
-                document.getElementById('authContainer').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                App.init();
-            }, 1500);
         } catch (error) {
-            document.getElementById('signupError').innerText = 'حدث خطأ، حاول مرة أخرى';
+            // معالجة أخطاء Firebase
+            if (error.code === 'auth/email-already-in-use') {
+                throw new Error('البريد الإلكتروني مستخدم بالفعل');
+            }
+            throw error;
         }
     },
 
     // تسجيل الدخول
-    async login() {
-        const username = document.getElementById('loginUsername').value.trim();
-        const password = document.getElementById('loginPassword').value.trim();
-        const errorDiv = document.getElementById('loginError');
-
-        if (!username || !password) {
-            errorDiv.innerText = 'أدخل اسم المستخدم وكلمة المرور';
-            return;
+    async login(email, password) {
+        if (!email || !password) {
+            throw new Error('أدخل البريد الإلكتروني وكلمة المرور');
         }
 
         try {
-            const snapshot = await db.ref('users').orderByChild('username').equalTo(username).once('value');
-            if (!snapshot.exists()) {
-                errorDiv.innerText = 'الحساب غير موجود. أنشئ حساباً أولاً.';
-                return;
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+
+            // التحقق من تفعيل البريد
+            if (!user.emailVerified) {
+                await auth.signOut();
+                throw new Error('الرجاء تفعيل البريد الإلكتروني أولاً. تحقق من صندوق الوارد');
             }
 
-            let userData;
-            snapshot.forEach(child => userData = child.val());
+            // تحديث آخر دخول في قاعدة البيانات
+            await db.ref(`users/${user.uid}/lastLogin`).set(new Date().toISOString());
 
-            if (userData.password !== password) {
-                errorDiv.innerText = 'كلمة المرور غير صحيحة';
-                return;
-            }
+            // جلب بيانات المستخدم من Realtime Database
+            const userSnapshot = await db.ref(`users/${user.uid}`).once('value');
+            this.currentUser = userSnapshot.val();
 
-            this.currentUser = {
-                uid: userData.uid,
-                username: userData.username,
-                fullName: userData.fullName,
-                photoURL: userData.photoURL || '',
-                bio: userData.bio || '',
-                email: userData.email || '',
-                subscribedChannel: userData.subscribedChannel || false
+            return {
+                success: true,
+                user: this.currentUser
             };
 
-            localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-            window.Channel.isSubscribed = this.currentUser.subscribedChannel;
-
-            document.getElementById('authContainer').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            App.init();
         } catch (error) {
-            errorDiv.innerText = 'خطأ في تسجيل الدخول';
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                throw new Error('البريد أو كلمة المرور غير صحيحة');
+            }
+            throw error;
         }
+    },
+
+    // إعادة إرسال رابط التفعيل
+    async resendVerification() {
+        const user = auth.currentUser;
+        if (user) {
+            await user.sendEmailVerification();
+            return 'تم إعادة إرسال رابط التفعيل';
+        }
+        throw new Error('لا يوجد مستخدم مسجل حالياً');
     },
 
     // تسجيل الخروج
-    logout() {
-        localStorage.removeItem('currentUser');
-        if (window.Chat && window.Chat.messagesListener) {
-            window.Chat.messagesListener.off();
-        }
-        if (window.Chat && window.Chat.chatListListener) {
-            window.Chat.chatListListener.off();
-        }
+    async logout() {
+        await auth.signOut();
         this.currentUser = null;
-        document.getElementById('mainApp').classList.add('hidden');
-        document.getElementById('authContainer').classList.remove('hidden');
-        UI.showLogin();
-        UI.closeDrawer();
-        Channel.closeChannelChat();
+        localStorage.removeItem('currentUser');
     },
 
-    // تحديث حقل في قاعدة البيانات والمحلي
-    async updateUserField(field, value) {
-        try {
-            const userSnapshot = await db.ref('users').orderByChild('uid').equalTo(this.currentUser.uid).once('value');
-            userSnapshot.forEach(child => {
-                child.ref.update({ [field]: value });
-            });
-            this.currentUser[field] = value;
-            localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-            UI.updateDrawerInfo();
-            return true;
-        } catch (error) {
-            console.error(error);
-            return false;
+    // التحقق من حالة المصادقة
+    onAuthStateChanged(callback) {
+        return auth.onAuthStateChanged(async (user) => {
+            if (user && user.emailVerified) {
+                // جلب البيانات من قاعدة البيانات
+                const snapshot = await db.ref(`users/${user.uid}`).once('value');
+                this.currentUser = snapshot.val();
+                localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                callback(this.currentUser);
+            } else {
+                this.currentUser = null;
+                localStorage.removeItem('currentUser');
+                callback(null);
+            }
+        });
+    },
+
+    // استعادة الجلسة من localStorage
+    loadSession() {
+        const saved = localStorage.getItem('currentUser');
+        if (saved) {
+            this.currentUser = JSON.parse(saved);
+            return this.currentUser;
         }
+        return null;
     }
 };
 
