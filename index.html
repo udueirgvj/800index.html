@@ -4,26 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>تلرفيب - تسجيل الدخول</title>
-    <!-- Firebase SDK (مشروعك القديم) -->
+    <!-- Firebase SDK (نسخة 8.10.1) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        /* التنسيقات الأساسية */
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
-        body { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); display:flex; justify-content:center; align-items:center; min-height:100vh; }
-        #app { width:100%; max-width:500px; height:700px; background:white; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.2); position:relative; overflow:hidden; display:flex; flex-direction:column; }
-        .auth-container { position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); display:flex; justify-content:center; align-items:center; padding:20px; }
-        .auth-box { width:100%; max-width:350px; background:rgba(255,255,255,0.95); backdrop-filter:blur(10px); padding:30px; border-radius:20px; box-shadow:0 15px 35px rgba(0,0,0,0.2); }
-        .auth-box h2 { color:#333; text-align:center; margin-bottom:25px; font-size:24px; }
-        .auth-box input { width:100%; padding:12px 15px; margin:8px 0; border:1px solid #ddd; border-radius:10px; font-size:15px; }
-        .auth-box input:focus { border-color:#667eea; outline:none; box-shadow:0 0 0 3px rgba(102,126,234,0.1); }
-        .auth-box button { width:100%; padding:12px; background:#667eea; color:white; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer; margin-top:15px; }
-        .auth-box button:hover { background:#5a67d8; transform:translateY(-2px); }
-        .link-btn { background:transparent !important; color:#667eea !important; border:1px solid #667eea !important; margin-top:10px; }
-        .link-btn:hover { background:#f0f3ff !important; transform:none !important; }
-        .hidden { display:none !important; }
-        .error { color:#e74c3c; font-size:13px; margin:5px 0; text-align:right; }
-        .success { color:#27ae60; font-size:13px; margin:5px 0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+        #app {
+            width: 100%;
+            max-width: 500px;
+            height: 700px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .auth-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .auth-box {
+            width: 100%;
+            max-width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        .auth-box h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        .auth-box input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+        .auth-box input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+            outline: none;
+        }
+        .auth-box button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.2s;
+        }
+        .auth-box button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        .link-btn {
+            background: transparent !important;
+            color: #667eea !important;
+            border: 1px solid #667eea !important;
+            margin-top: 10px;
+        }
+        .link-btn:hover {
+            background: #f0f3ff !important;
+            transform: none !important;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 13px;
+            margin: 5px 0;
+            text-align: right;
+        }
+        .success {
+            color: #27ae60;
+            font-size: 13px;
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -31,9 +125,9 @@
         <div id="authContainer" class="auth-container">
             <!-- تسجيل الدخول -->
             <div id="loginContainer" class="auth-box">
-                <div style="text-align:center; margin-bottom:25px;">
-                    <h1 style="color:#667eea; font-size:40px; margin-bottom:5px;">تلرفيب</h1>
-                    <p style="color:#666;">مرحباً بكم في تلرفيب</p>
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <h1 style="color: #667eea; font-size: 40px; margin-bottom: 5px;">تلرفيب</h1>
+                    <p style="color: #666;">مرحباً بكم في تلرفيب</p>
                 </div>
                 <input type="text" id="loginUsername" placeholder="اسم المستخدم">
                 <input type="password" id="loginPassword" placeholder="كلمة المرور">
@@ -42,7 +136,7 @@
                 <button class="link-btn" onclick="showSignup()">إنشاء حساب</button>
             </div>
 
-            <!-- إنشاء حساب -->
+            <!-- إنشاء حساب (يحتوي على جميع الحقول) -->
             <div id="signupContainer" class="auth-box hidden">
                 <h2>📝 إنشاء حساب</h2>
                 <input type="text" id="signupFullname" placeholder="الاسم الشخصي">
@@ -87,7 +181,7 @@
             return /^[A-Za-z0-9_]{5,}$/.test(username);
         }
 
-        // إنشاء حساب جديد (بدون Firebase Authentication)
+        // إنشاء حساب جديد
         async function handleSignUp() {
             const fullName = document.getElementById('signupFullname').value.trim();
             const username = document.getElementById('signupUsername').value.trim();
