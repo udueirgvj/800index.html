@@ -1,13 +1,13 @@
-/* ===== تصميم تليجرام – بدون حواف زرقاء ===== */
+/* ===== التصميم القديم (أزرق/أبيض) ===== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    background: #0e1621;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -19,53 +19,46 @@ body {
 #app {
     width: 100%;
     max-width: 500px;
-    height: 100vh;
-    background: #17212b;
+    height: 700px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
-/* ===== الشريط العلوي – تليجرام ===== */
+/* ===== الشريط العلوي ===== */
 .top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 16px;
-    background: #17212b;
+    padding: 15px 20px;
+    background: #667eea;
     color: white;
-    border-bottom: 1px solid #1e2c3a;
 }
 
 .app-name {
     font-size: 20px;
-    font-weight: 600;
-    color: white;
+    font-weight: bold;
 }
 
 .menu-icon, .search-icon {
-    font-size: 22px;
+    font-size: 24px;
     cursor: pointer;
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    transition: background 0.2s;
 }
 
-.menu-icon:hover, .search-icon:hover {
-    background: #2b3a47;
-}
-
-/* ===== شريط البحث – مثل تليجرام ===== */
+/* ===== شريط البحث ===== */
 .search-bar {
-    background: #1e2c3a;
-    padding: 8px 16px;
-    border-bottom: 1px solid #0e1621;
+    padding: 10px 20px;
+    background: white;
+    border-bottom: 1px solid #eee;
     display: none;
 }
 
@@ -75,26 +68,19 @@ body {
 
 .search-bar input {
     width: 100%;
-    padding: 10px 16px;
-    background: #17212b;
-    border: none;
-    border-radius: 20px;
-    color: white;
-    font-size: 15px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 25px;
     outline: none;
-}
-
-.search-bar input::placeholder {
-    color: #7f8c8d;
 }
 
 .search-results {
     margin-top: 10px;
-    max-height: 300px;
+    max-height: 200px;
     overflow-y: auto;
-    background: #17212b;
+    background: white;
     border-radius: 10px;
-    border: 1px solid #1e2c3a;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     display: none;
 }
 
@@ -107,27 +93,135 @@ body {
     align-items: center;
     gap: 12px;
     padding: 12px;
-    border-bottom: 1px solid #1e2c3a;
+    border-bottom: 1px solid #eee;
     cursor: pointer;
-    transition: background 0.2s;
 }
 
 .search-result-item:hover {
-    background: #1e2c3a;
+    background: #f5f5f5;
 }
 
-/* ===== قائمة المحادثات – مثل تليجرام ===== */
+/* ===== القائمة الجانبية ===== */
+.drawer {
+    position: absolute;
+    top: 0;
+    right: -280px;
+    width: 280px;
+    height: 100%;
+    background: white;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.drawer.open {
+    right: 0;
+}
+
+.drawer-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.drawer-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.drawer-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.drawer-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 0;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.drawer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    display: none;
+}
+
+.drawer-overlay.open {
+    display: block;
+}
+
+/* ===== المحتوى الرئيسي ===== */
 .main-content {
     flex: 1;
     overflow-y: auto;
-    background: #0e1621;
-    padding: 8px;
+    padding: 10px;
+    background: #f0f2f5;
 }
 
+/* ===== قناة المطور ===== */
+.channel-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.channel-card:hover {
+    transform: scale(1.02);
+}
+
+.channel-icon {
+    font-size: 30px;
+}
+
+.channel-text {
+    flex: 1;
+}
+
+.channel-title {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.channel-sub {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* ===== قائمة المحادثات ===== */
 .chat-list {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 5px;
 }
 
 .chat-list-item {
@@ -135,21 +229,21 @@ body {
     align-items: center;
     gap: 12px;
     padding: 12px;
-    background: #17212b;
+    background: white;
     border-radius: 10px;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .chat-list-item:hover {
-    background: #1e2c3a;
+    background: #f5f5f5;
 }
 
 .chat-avatar {
-    width: 54px;
-    height: 54px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    background: #2b3a47;
+    background: #667eea;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -171,15 +265,14 @@ body {
 }
 
 .chat-name {
-    font-weight: 600;
-    color: white;
+    font-weight: bold;
     display: flex;
     justify-content: space-between;
 }
 
 .chat-last-msg {
     font-size: 14px;
-    color: #7f8c8d;
+    color: #666;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -187,58 +280,21 @@ body {
 
 .chat-time {
     font-size: 12px;
-    color: #7f8c8d;
+    color: #999;
 }
 
-/* ===== قناة المطور – تصميم جديد ===== */
-.channel-card {
-    background: #1e2c3a;
-    color: white;
-    padding: 16px;
-    border-radius: 12px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    transition: background 0.2s;
-    border: 1px solid #2b3a47;
-}
-
-.channel-card:hover {
-    background: #2b3a47;
-}
-
-.channel-icon {
-    font-size: 32px;
-}
-
-.channel-text {
-    flex: 1;
-}
-
-.channel-title {
-    font-weight: 600;
-    font-size: 16px;
-}
-
-.channel-sub {
-    font-size: 13px;
-    color: #adb5bd;
-}
-
-/* ===== غرفة الدردشة – مثل تليجرام ===== */
+/* ===== غرفة الدردشة ===== */
 .chat-room {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: #0e1621;
+    background: white;
     z-index: 100;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s;
     transform: translateX(100%);
 }
 
@@ -249,26 +305,15 @@ body {
 .chat-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: #17212b;
+    gap: 15px;
+    padding: 15px;
+    background: #667eea;
     color: white;
-    border-bottom: 1px solid #1e2c3a;
 }
 
 .back-btn {
     font-size: 24px;
     cursor: pointer;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-}
-
-.back-btn:hover {
-    background: #1e2c3a;
 }
 
 .chat-header-info {
@@ -276,173 +321,101 @@ body {
 }
 
 .chat-header-name {
-    font-weight: 600;
+    font-weight: bold;
 }
 
 .chat-header-status {
     font-size: 12px;
-    color: #7f8c8d;
+    opacity: 0.9;
+}
+
+.subscribe-btn {
+    background: white;
+    color: #667eea;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.subscribe-btn.subscribed {
+    background: #27ae60;
+    color: white;
 }
 
 .messages-container {
     flex: 1;
     overflow-y: auto;
-    padding: 16px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    background: #0e1621;
+    gap: 10px;
+    background: #f9f9f9;
 }
 
 .message {
     max-width: 80%;
-    padding: 10px 14px;
+    padding: 10px 15px;
     border-radius: 18px;
     word-wrap: break-word;
     align-self: flex-start;
-    background: #17212b;
-    color: white;
-    position: relative;
+    background: #f0f0f0;
 }
 
 .message.sent {
     align-self: flex-end;
-    background: #2b5278;
+    background: #667eea;
     color: white;
 }
 
 .message-time {
     font-size: 10px;
-    color: #7f8c8d;
-    margin-top: 4px;
+    color: #999;
+    margin-top: 5px;
     text-align: left;
 }
 
 .chat-input-area {
     display: flex;
-    gap: 8px;
-    padding: 12px 16px;
-    background: #17212b;
-    border-top: 1px solid #1e2c3a;
+    gap: 10px;
+    padding: 15px;
+    background: white;
+    border-top: 1px solid #eee;
 }
 
-#messageInput {
+#messageInput, #channelMessageInput {
     flex: 1;
-    padding: 12px 16px;
-    background: #1e2c3a;
-    border: none;
+    padding: 12px;
+    border: 1px solid #ddd;
     border-radius: 25px;
-    color: white;
-    font-size: 15px;
     outline: none;
 }
 
-#messageInput::placeholder {
-    color: #7f8c8d;
-}
-
-#sendBtn {
-    background: #2b5278;
+#sendBtn, #channelSendBtn {
+    background: #667eea;
     color: white;
     border: none;
-    width: 48px;
-    height: 48px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     cursor: pointer;
     font-size: 20px;
-    transition: background 0.2s;
 }
 
-#sendBtn:hover {
-    background: #3a6c99;
+#sendBtn:disabled, #channelSendBtn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
 }
 
-/* ===== القائمة الجانبية – تليجرام ===== */
-.drawer {
-    position: absolute;
-    top: 0;
-    right: -280px;
-    width: 280px;
-    height: 100%;
-    background: #17212b;
-    box-shadow: -2px 0 10px rgba(0,0,0,0.5);
-    transition: right 0.3s ease;
-    z-index: 1000;
-    overflow-y: auto;
-    padding: 20px;
-    color: white;
-}
-
-.drawer.open {
-    right: 0;
-}
-
-.drawer-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #1e2c3a;
-}
-
-.drawer-avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: #2b3a47;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 28px;
-    cursor: pointer;
-    overflow: hidden;
-}
-
-.drawer-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.drawer-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 14px 0;
-    cursor: pointer;
-    color: #e4e6eb;
-    border-bottom: 1px solid #1e2c3a;
-}
-
-.drawer-menu-item:hover {
-    background: #1e2c3a;
-}
-
-.drawer-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.7);
-    z-index: 999;
-    display: none;
-}
-
-.drawer-overlay.open {
-    display: block;
-}
-
-/* ===== شاشات المصادقة – بدون تغيير كبير ===== */
+/* ===== شاشات المصادقة ===== */
 .auth-container {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: #17212b;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     z-index: 200;
     display: flex;
     flex-direction: column;
@@ -454,55 +427,65 @@ body {
 .auth-box {
     width: 100%;
     max-width: 350px;
-    background: #1e2c3a;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
     padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    color: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
 }
 
 .auth-box h2 {
-    color: white;
+    color: #333;
     text-align: center;
     margin-bottom: 25px;
+    font-size: 24px;
 }
 
 .auth-box input {
     width: 100%;
-    padding: 12px 16px;
+    padding: 12px 15px;
     margin: 8px 0;
-    background: #17212b;
-    border: 1px solid #2b3a47;
+    border: 1px solid #ddd;
     border-radius: 10px;
-    color: white;
     font-size: 15px;
+    transition: 0.2s;
 }
 
 .auth-box input:focus {
-    border-color: #2b5278;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
     outline: none;
 }
 
 .auth-box button {
     width: 100%;
     padding: 12px;
-    background: #2b5278;
+    background: #667eea;
     color: white;
     border: none;
     border-radius: 10px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: bold;
     cursor: pointer;
     margin-top: 15px;
 }
 
 .auth-box button:hover {
-    background: #3a6c99;
+    background: #5a67d8;
+    transform: translateY(-2px);
 }
 
 .link-btn {
     background: transparent !important;
-    border: 1px solid #2b5278 !important;
+    color: #667eea !important;
+    border: 1px solid #667eea !important;
+    margin-top: 10px;
+}
+
+.link-btn:hover {
+    background: #f0f3ff !important;
+    color: #5a67d8 !important;
+    transform: none !important;
 }
 
 .hidden {
@@ -510,70 +493,41 @@ body {
 }
 
 .error {
-    color: #ff6b6b;
+    color: #e74c3c;
+    font-size: 13px;
+    margin: 5px 0;
+    text-align: right;
+}
+
+.success {
+    color: #27ae60;
     font-size: 13px;
     margin: 5px 0;
 }
 
-.success {
-    color: #51cf66;
-}
-
-/* ===== تصميم المجموعات والقنوات ===== */
+/* ===== تصميم المجموعات ===== */
 .group-info {
-    background: #1e2c3a;
+    background: white;
     padding: 16px;
     border-radius: 12px;
     margin-bottom: 16px;
-    border: 1px solid #2b3a47;
-}
-
-.group-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
+    border: 1px solid #eee;
 }
 
 .group-avatar {
     width: 48px;
     height: 48px;
     border-radius: 12px;
-    background: #2b3a47;
+    background: #667eea;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
     font-size: 24px;
 }
 
-.group-details {
-    flex: 1;
-}
-
-.group-name {
-    font-weight: 600;
-    color: white;
-    font-size: 16px;
-}
-
-.group-meta {
-    color: #7f8c8d;
-    font-size: 13px;
-}
-
-.group-link {
-    background: #17212b;
-    padding: 10px;
-    border-radius: 8px;
-    color: #7f8c8d;
-    font-size: 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
 .join-btn {
-    background: #2b5278;
+    background: #667eea;
     color: white;
     border: none;
     padding: 6px 16px;
@@ -582,19 +536,10 @@ body {
     cursor: pointer;
 }
 
-.join-btn:hover {
-    background: #3a6c99;
-}
-
 .member-count {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #7f8c8d;
+    color: #666;
     font-size: 13px;
 }
-
-/* ===== إصلاح مشكلة اختفاء المحادثات ===== */
-.chat-list-item.unread {
-    background: #1e2c3a;
-    }
