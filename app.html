@@ -1133,8 +1133,7 @@
         };
 
         // -------------------- كائن Search (بحث شامل) --------------------
-        const Search = {
-            async handle() {
+        async handle() {
                 const query = document.getElementById('searchInput').value.trim().toLowerCase();
                 const resultsDiv = document.getElementById('searchResults');
                 if (query.length < 2) {
@@ -1189,8 +1188,7 @@
 
                 resultsDiv.innerHTML = html || '<div style="padding:12px; color:#999;">لا توجد نتائج</div>';
                 resultsDiv.classList.add('show');
-            }
-        };
+        }
 
         // -------------------- كائن الدعم (Support) --------------------
         const Support = {
@@ -2018,4 +2016,5 @@
     </script>
 </body>
 </html>
+
 
