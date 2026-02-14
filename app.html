@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تلرفيب - التطبيق</title>
+    <title>تلرفيب - الإصدار المتطور</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -605,6 +605,108 @@
             background: #e3f2fd;
             border-right: 4px solid #2196f3;
         }
+        /* مؤشر الكتابة */
+        .typing-indicator {
+            font-size: 12px;
+            color: #999;
+            padding: 5px 15px;
+        }
+        /* رسالة معاد توجيهها */
+        .forwarded-message {
+            background: #fff3cd;
+            border-right: 4px solid #ffc107;
+        }
+        /* قائمة الردود */
+        .reply-preview {
+            background: #f0f0f0;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+        /* نافذة إعادة التوجيه */
+        #forwardModal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s;
+            transform: translateY(100%);
+        }
+        #forwardModal.open {
+            transform: translateY(0);
+        }
+        .forward-list {
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .forward-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .forward-item:hover {
+            background: #f5f5f5;
+        }
+        /* البحث داخل المحادثة */
+        .search-chat-bar {
+            display: flex;
+            gap: 10px;
+            padding: 10px 15px;
+            background: #f0f2f5;
+        }
+        .search-chat-bar input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+        .search-chat-bar button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        /* اقتراحات الإشارة */
+        .mention-suggestions {
+            position: absolute;
+            bottom: 70px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+            z-index: 600;
+        }
+        .mention-suggestions.show {
+            display: block;
+        }
+        .mention-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .mention-item:hover {
+            background: #f5f5f5;
+        }
     </style>
 </head>
 <body>
@@ -616,7 +718,7 @@
             <div class="search-icon" onclick="UI.toggleSearch()">🔍</div>
         </div>
 
-        <!-- شريط البحث -->
+        <!-- شريط البحث العام -->
         <div id="searchBar" class="search-bar">
             <input type="text" id="searchInput" placeholder="ابحث عن مستخدم، قناة، أو مجموعة..." onkeyup="Search.handle()">
             <div id="searchResults" class="search-results"></div>
@@ -717,6 +819,17 @@
         </div>
     </div>
 
+    <!-- نافذة إعادة التوجيه -->
+    <div id="forwardModal">
+        <div class="modal-header" style="background: #667eea;">
+            <div class="back-btn" onclick="UI.closeForwardModal()">←</div>
+            <div>إعادة توجيه الرسالة إلى</div>
+        </div>
+        <div class="forward-list" id="forwardList">
+            <!-- تُعبأ ديناميكياً -->
+        </div>
+    </div>
+
     <!-- غرفة الدردشة -->
     <div id="chatRoom" class="chat-room">
         <div class="chat-header" onclick="UI.openProfileFromChat()">
@@ -730,6 +843,16 @@
                 <button onclick="Chat.banUser()" style="background:#e74c3c; border:none; color:white; padding:4px 8px; border-radius:4px;">حظر</button>
             </div>
         </div>
+        
+        <!-- شريط البحث داخل المحادثة -->
+        <div class="search-chat-bar" id="searchChatBar" style="display: none;">
+            <input type="text" id="searchChatInput" placeholder="ابحث في هذه المحادثة...">
+            <button onclick="Chat.searchInChat()">بحث</button>
+        </div>
+        
+        <!-- اقتراحات الإشارة -->
+        <div class="mention-suggestions" id="mentionSuggestions"></div>
+        
         <div id="messagesContainer" class="messages-container"></div>
         <div class="chat-input-area">
             <input type="text" id="messageInput" placeholder="اكتب رسالة...">
@@ -892,6 +1015,50 @@
             if (Chat.currentChatType === 'private' && Chat.currentChatUser) {
                 this.showProfile(Chat.currentChatUser.uid);
             }
+        },
+        
+        openForwardModal() {
+            this.loadForwardList();
+            document.getElementById('forwardModal').classList.add('open');
+        },
+        
+        closeForwardModal() {
+            document.getElementById('forwardModal').classList.remove('open');
+        },
+        
+        async loadForwardList() {
+            const list = document.getElementById('forwardList');
+            list.innerHTML = '<div style="padding:20px; text-align:center;">جاري التحميل...</div>';
+            
+            // جلب آخر 20 محادثة
+            const conversations = [];
+            const msgsSnap = await db.ref('messages').once('value');
+            msgsSnap.forEach(chatSnap => {
+                const msgs = chatSnap.val();
+                Object.values(msgs).forEach(msg => {
+                    if (msg.senderId === currentUser.uid || msg.receiverId === currentUser.uid) {
+                        const otherId = msg.senderId === currentUser.uid ? msg.receiverId : msg.senderId;
+                        if (!conversations.find(c => c.id === otherId)) {
+                            conversations.push({ id: otherId, type: 'user' });
+                        }
+                    }
+                });
+            });
+            
+            let html = '';
+            for (let conv of conversations.slice(0, 20)) {
+                const userSnap = await db.ref('users').orderByChild('uid').equalTo(conv.id).once('value');
+                if (userSnap.exists()) {
+                    let user;
+                    userSnap.forEach(u => user = u.val());
+                    html += `<div class="forward-item" onclick="Chat.forwardMessageTo('${user.uid}', '${user.username}', '${user.fullName}')">
+                        <div class="chat-avatar">${user.fullName.charAt(0)}</div>
+                        <div><strong>${user.fullName}</strong><br><span style="color:#666;">@${user.username}</span></div>
+                    </div>`;
+                }
+            }
+            
+            list.innerHTML = html || '<div style="padding:20px; text-align:center;">لا توجد محادثات</div>';
         }
     };
 
@@ -1031,7 +1198,7 @@
             }
         };
 
-        // -------------------- كائن BotMaker (بوت إنشاء البوتات الجديد) --------------------
+        // -------------------- كائن BotMaker (بوت إنشاء البوتات المتطور) --------------------
         const BotMaker = {
             async startConversation() {
                 Chat.currentChatType = 'botmaker';
@@ -1050,7 +1217,7 @@
                         <div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>
                     </div>
                     <div class="message received bot-message">
-                        <div>1️⃣ بوت تواصل (للمحادثات)<br>2️⃣ بوت حماية (للمجموعات)<br>3️⃣ بوت رشق (للتصويت)<br>4️⃣ بوت ردود (للردود التلقائية)</div>
+                        <div>1️⃣ بوت تواصل (للمحادثات)<br>2️⃣ بوت حماية (للمجموعات)<br>3️⃣ بوت رشق (للتصويت)<br>4️⃣ بوت ردود (للردود التلقائية)<br>5️⃣ بوت تذكير (للتذكيرات)<br>6️⃣ بوت مترجم (للترجمة)</div>
                         <div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>
                     </div>
                 `;
@@ -1070,8 +1237,10 @@
                     else if (choice === 2) type = 'حماية';
                     else if (choice === 3) type = 'رشق';
                     else if (choice === 4) type = 'ردود';
+                    else if (choice === 5) type = 'تذكير';
+                    else if (choice === 6) type = 'مترجم';
                     else {
-                        reply = '❌ اختيار غير صالح. الرجاء اختيار رقم من 1 إلى 4.';
+                        reply = '❌ اختيار غير صالح. الرجاء اختيار رقم من 1 إلى 6.';
                         await this.sendBotMessage(reply);
                         return;
                     }
@@ -1133,14 +1302,19 @@
             }
         };
 
-        // -------------------- كائن Chat (معدل لدعم البوتات) --------------------
+        // -------------------- كائن Chat المتطور --------------------
         const Chat = {
             currentChat: null,
             currentChatId: null,
             currentChatType: null,
             currentChatUser: null,
+            currentGroupId: null,
             messagesListener: null,
             presenceListeners: {},
+            typingTimeout: null,
+            replyToMessage: null,
+            forwardMessage: null,
+            searchResults: [],
 
             async startPrivate(uid, username, fullName) {
                 if (uid === 'ttdbot') {
@@ -1230,6 +1404,9 @@
                 this.currentChat = null;
                 this.currentChatId = null;
                 this.currentChatUser = null;
+                this.currentGroupId = null;
+                this.replyToMessage = null;
+                this.forwardMessage = null;
             },
 
             loadPrivateMessages(otherUid) {
@@ -1240,6 +1417,7 @@
             },
 
             loadGroupMessages(groupId) {
+                this.currentGroupId = groupId;
                 const messagesRef = db.ref(`groupMessages/${groupId}`);
                 this.messagesListener = messagesRef.orderByChild('timestamp').on('value', (snap) => {
                     this.displayMessages(snap, true);
@@ -1260,22 +1438,93 @@
                 for (let msg of messages) {
                     const div = document.createElement('div');
                     div.className = `message ${msg.senderId === currentUser.uid ? 'sent' : 'received'}`;
+                    
+                    // إضافة أزرار التفاعل
+                    div.setAttribute('onclick', `Chat.showMessageActions('${msg.messageId}', '${msg.text}')`);
+                    
                     let senderHtml = '';
                     if (isGroup && msg.senderId !== currentUser.uid) {
                         const userSnap = await db.ref(`users/${msg.senderId}`).once('value');
                         const user = userSnap.val();
                         senderHtml = `<div class="sender-name">${user?.fullName || 'مستخدم'}</div>`;
                     }
-                    div.innerHTML = senderHtml + `<div>${msg.text}</div><div class="message-time">${new Date(msg.timestamp).toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>`;
+                    
+                    // إضافة معاينة الرد إذا كانت موجودة
+                    let replyHtml = '';
+                    if (msg.replyTo) {
+                        replyHtml = `<div class="reply-preview" onclick="event.stopPropagation()">↩️ ${msg.replyTo}</div>`;
+                    }
+                    
+                    div.innerHTML = replyHtml + senderHtml + `<div>${msg.text}</div><div class="message-time">${new Date(msg.timestamp).toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>`;
                     container.appendChild(div);
                 }
                 container.scrollTop = container.scrollHeight;
+            },
+
+            showMessageActions(messageId, text) {
+                const action = prompt('اختر:\n1️⃣ للرد على الرسالة\n2️⃣ لإعادة توجيه الرسالة\n3️⃣ للإشارة إلى عضو');
+                if (action === '1') {
+                    this.setReplyTo(messageId, text);
+                } else if (action === '2') {
+                    this.setForwardMessage(messageId, text);
+                    UI.openForwardModal();
+                } else if (action === '3') {
+                    this.showMentionSuggestions();
+                }
+            },
+
+            setReplyTo(messageId, text) {
+                this.replyToMessage = { id: messageId, text };
+                document.getElementById('messageInput').placeholder = `الرد على: ${text.substring(0,20)}...`;
+            },
+
+            setForwardMessage(messageId, text) {
+                this.forwardMessage = { id: messageId, text };
+            },
+
+            async forwardMessageTo(uid, username, fullName) {
+                if (!this.forwardMessage) return;
+                
+                const ids = [currentUser.uid, uid].sort();
+                const chatId = `private_${ids[0]}_${ids[1]}`;
+                
+                const msg = {
+                    messageId: db.ref().push().key,
+                    senderId: currentUser.uid,
+                    receiverId: uid,
+                    text: `↪️ تمت إعادة توجيهها: ${this.forwardMessage.text}`,
+                    timestamp: Date.now(),
+                    forwarded: true
+                };
+                
+                await db.ref(`messages/${chatId}/${msg.messageId}`).set(msg);
+                UI.closeForwardModal();
+                this.forwardMessage = null;
+                alert('تم إعادة توجيه الرسالة بنجاح');
+            },
+
+            clearReply() {
+                this.replyToMessage = null;
+                document.getElementById('messageInput').placeholder = 'اكتب رسالة...';
             },
 
             async sendMessage() {
                 const input = document.getElementById('messageInput');
                 const text = input.value.trim();
                 if (!text || !this.currentChatId) return;
+
+                // معالجة الإشارات
+                const mentionMatch = text.match(/@(\w+)/g);
+                if (mentionMatch && this.currentGroupId) {
+                    // البحث عن المستخدمين المذكورين
+                    for (let mention of mentionMatch) {
+                        const username = mention.substring(1);
+                        const userSnap = await db.ref('users').orderByChild('username').equalTo(username).once('value');
+                        if (userSnap.exists()) {
+                            // يمكن إرسال إشعار للمستخدم المذكور
+                        }
+                    }
+                }
 
                 if (this.currentChatType === 'bot') {
                     await this.handleBotMessage(text);
@@ -1296,6 +1545,9 @@
                         text,
                         timestamp: Date.now()
                     };
+                    if (this.replyToMessage) {
+                        msg.replyTo = this.replyToMessage.text;
+                    }
                     await db.ref(`messages/${this.currentChatId}/${msg.messageId}`).set(msg);
                 } else {
                     const groupId = this.currentChatId.replace('group_','');
@@ -1315,8 +1567,12 @@
                         text,
                         timestamp: Date.now()
                     };
+                    if (this.replyToMessage) {
+                        msg.replyTo = this.replyToMessage.text;
+                    }
                     await db.ref(`groupMessages/${groupId}/${msg.messageId}`).set(msg);
                 }
+                this.clearReply();
                 input.value = '';
             },
 
@@ -1392,6 +1648,72 @@
 
             banUser() {
                 alert('خاصية الحظر قيد التطوير');
+            },
+
+            showMentionSuggestions() {
+                const suggestions = document.getElementById('mentionSuggestions');
+                suggestions.innerHTML = '';
+                
+                // إضافة اقتراحات للمستخدمين في المجموعة الحالية
+                if (this.currentGroupId) {
+                    db.ref(`groupMembers/${this.currentGroupId}`).once('value', snap => {
+                        let html = '';
+                        snap.forEach(member => {
+                            db.ref(`users/${member.key}`).once('value', userSnap => {
+                                const user = userSnap.val();
+                                if (user) {
+                                    html += `<div class="mention-item" onclick="Chat.insertMention('${user.username}')">
+                                        <div class="chat-avatar" style="width:30px;height:30px;">${user.fullName.charAt(0)}</div>
+                                        <div><strong>${user.fullName}</strong> @${user.username}</div>
+                                    </div>`;
+                                }
+                                suggestions.innerHTML = html;
+                            });
+                        });
+                        suggestions.classList.add('show');
+                    });
+                }
+            },
+
+            insertMention(username) {
+                const input = document.getElementById('messageInput');
+                input.value += `@${username} `;
+                document.getElementById('mentionSuggestions').classList.remove('show');
+                input.focus();
+            },
+
+            toggleSearchInChat() {
+                const bar = document.getElementById('searchChatBar');
+                if (bar.style.display === 'none') {
+                    bar.style.display = 'flex';
+                } else {
+                    bar.style.display = 'none';
+                }
+            },
+
+            async searchInChat() {
+                const query = document.getElementById('searchChatInput').value.trim().toLowerCase();
+                if (!query || !this.currentChatId) return;
+
+                const messagesRef = this.currentChatType === 'private' 
+                    ? db.ref(`messages/${this.currentChatId}`)
+                    : db.ref(`groupMessages/${this.currentGroupId}`);
+
+                const snap = await messagesRef.once('value');
+                const results = [];
+                
+                snap.forEach(child => {
+                    const msg = child.val();
+                    if (msg.text && msg.text.toLowerCase().includes(query)) {
+                        results.push(msg);
+                    }
+                });
+
+                if (results.length > 0) {
+                    alert(`تم العثور على ${results.length} رسالة تحتوي على "${query}"`);
+                } else {
+                    alert('لا توجد نتائج');
+                }
             }
         };
 
