@@ -155,3 +155,72 @@
     </div>
 </body>
 </html>
+// ===================================================
+// loader.js - تحميل جميع ملفات التطبيق بالترتيب
+// ===================================================
+
+// قائمة الملفات بالترتيب المطلوب
+const files = [
+    'js/firebase-config.js',
+    'js/auth.js',
+    'js/bots.js',
+    'js/support.js',
+    'js/groups.js',
+    'js/chat.js',
+    'js/app.js'
+];
+
+// دالة لتحميل ملف script بشكل متسلسل
+function loadScript(index) {
+    if (index >= files.length) return; // انتهى التحميل
+
+    const script = document.createElement('script');
+    script.src = files[index];
+    script.onload = () => loadScript(index + 1); // تحميل التالي بعد انتهاء الحالي
+    script.onerror = () => console.error('خطأ في تحميل الملف:', files[index]);
+    document.head.appendChild(script);
+}
+
+// بدء التحميل من أول ملف
+loadScript(0);
+// ===================================================
+// app.js - تهيئة التطبيق
+// ===================================================
+
+// المتغيرات العامة
+let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+if (!currentUser) {
+    window.location.href = 'index.html';
+}
+
+const SUPPORT_USERNAME = 'volunteer support';
+const SUPPORT_UID = 'support_team';
+
+// دالة التحقق من الدعم
+async function checkIfSupport() {
+    const isSupport = currentUser.username === SUPPORT_USERNAME || currentUser.uid === SUPPORT_UID;
+    if (isSupport) {
+        document.getElementById('supportMenuItem').style.display = 'flex';
+        await db.ref('support/staff').child(currentUser.uid).set({
+            username: currentUser.username,
+            fullName: currentUser.fullName,
+            active: true,
+            lastSeen: Date.now()
+        });
+    }
+    return isSupport;
+}
+
+// دالة linkify (تحويل @username إلى رابط)
+function linkify(text) {
+    return text.replace(/@(\w+)/g, '<a href="#" onclick="event.preventDefault(); Chat.startPrivateByUsername(\'$1\'); return false;">@$1</a>');
+}
+window.linkify = linkify;
+
+// تهيئة التطبيق
+async function init() {
+    UI.updateDrawerInfo();
+    await checkIfSupport();
+    loadChatList(); // من chat.js
+}
+init();
