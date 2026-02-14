@@ -638,7 +638,7 @@
             <div class="drawer-menu-item" onclick="UI.showSettings('counters')">📊 العدادات</div>
             <div class="drawer-menu-item" onclick="Auth.logout()">🚪 تسجيل خروج</div>
         </div>
-    <!-- المحتوى الرئيسي -->
+            <!-- المحتوى الرئيسي -->
     <div id="mainContent" class="main-content">
         <!-- قناة المطور (ثابتة) -->
         <div class="channel-card" onclick="Channel.open()">
@@ -860,7 +860,6 @@
         editUsername() { alert('تغيير اسم المستخدم قيد التطوير'); this.closeDrawer(); },
         toggleDarkMode() { document.body.classList.toggle('dark-mode'); this.closeDrawer(); },
         
-        // عرض الملف الشخصي
         async showProfile(uid) {
             const snap = await db.ref(`users/${uid}`).once('value');
             const user = snap.val();
@@ -882,7 +881,7 @@
         
         changeProfilePhoto(uid) {
             if (uid !== currentUser.uid) return;
-            this.changePhoto(); // يعيد استخدام نفس الدالة
+            this.changePhoto();
         },
         
         closeProfile() {
@@ -892,70 +891,76 @@
         openProfileFromChat() {
             if (Chat.currentChatType === 'private' && Chat.currentChatUser) {
                 this.showProfile(Chat.currentChatUser.uid);
-            } else if (Chat.currentChatType === 'group' || Chat.currentChatType === 'channel') {
-                // يمكن عرض معلومات المجموعة لاحقاً
             }
         }
     };
-            // -------------------- كائن Auth (تسجيل خروج) --------------------
-        const Auth = {
-            logout() {
-                userStatusRef.remove();
-                localStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
+
+    // -------------------- كائن Auth (تسجيل خروج) --------------------
+    const Auth = {
+        logout() {
+            userStatusRef.remove();
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    };
+
+    // -------------------- كائن Search (بحث شامل) --------------------
+    const Search = {
+        async handle() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('searchResults');
+            if (query.length < 2) {
+                resultsDiv.classList.remove('show');
+                return;
             }
-        };
+            let html = '';
 
-        // -------------------- كائن Search (بحث شامل) --------------------
-        const Search = {
-            async handle() {
-                const query = document.getElementById('searchInput').value.trim().toLowerCase();
-                const resultsDiv = document.getElementById('searchResults');
-                if (query.length < 2) {
-                    resultsDiv.classList.remove('show');
-                    return;
-                }
-                let html = '';
-
-                // 1. البحث عن المستخدمين
-                const usersSnap = await db.ref('users').once('value');
-                usersSnap.forEach(child => {
-                    const u = child.val();
-                    if (u.username && u.username.toLowerCase().includes(query) && u.uid !== currentUser.uid) {
-                        html += `<div class="search-result-item" onclick="Chat.startPrivate('${u.uid}', '${u.username}', '${u.fullName}')">
-                            <div class="chat-avatar">${u.fullName.charAt(0)}</div>
-                            <div><strong>${u.fullName}</strong><br><span style="color:#666;">@${u.username}</span></div>
-                        </div>`;
-                    }
-                });
-
-                // 2. البحث عن بوت TTDBOT
-                if ('ttdbot'.includes(query)) {
-                    html += `<div class="search-result-item" onclick="Chat.startPrivate('ttdbot', 'ttdbot', 'TTDBOT')">
-                        <div class="chat-avatar" style="background: #2196f3;">🤖</div>
-                        <div><strong>TTDBOT</strong> <span class="verified-badge">موثق</span><br><span style="color:#666;">@ttdbot</span></div>
+            // 1. البحث عن المستخدمين
+            const usersSnap = await db.ref('users').once('value');
+            usersSnap.forEach(child => {
+                const u = child.val();
+                if (u.username && u.username.toLowerCase().includes(query) && u.uid !== currentUser.uid) {
+                    html += `<div class="search-result-item" onclick="Chat.startPrivate('${u.uid}', '${u.username}', '${u.fullName}')">
+                        <div class="chat-avatar">${u.fullName.charAt(0)}</div>
+                        <div><strong>${u.fullName}</strong><br><span style="color:#666;">@${u.username}</span></div>
                     </div>`;
                 }
+            });
 
-                // 3. البحث عن القنوات والمجموعات
-                const groupsSnap = await db.ref('groups').once('value');
-                groupsSnap.forEach(child => {
-                    const g = child.val();
-                    if ((g.name && g.name.toLowerCase().includes(query)) || (g.username && g.username.toLowerCase().includes(query))) {
-                        const typeLabel = g.type === 'channel' ? '📢 قناة' : '👥 مجموعة';
-                        html += `<div class="search-result-item" onclick="GroupsAndChannels.open('${g.id}')">
-                            <div class="chat-avatar" style="border-radius: ${g.type==='channel'?'8px':'50%'};">${g.type==='channel'?'📢':'👥'}</div>
-                            <div><strong>${g.name}</strong><br><span style="color:#666;">@${g.username} • ${typeLabel} • ${g.memberCount||0} عضو</span></div>
-                        </div>`;
-                    }
-                });
-
-                resultsDiv.innerHTML = html || '<div style="padding:12px; color:#999;">لا توجد نتائج</div>';
-                resultsDiv.classList.add('show');
+            // 2. البحث عن بوت TTDBOT
+            if ('ttdbot'.includes(query)) {
+                html += `<div class="search-result-item" onclick="Chat.startPrivate('ttdbot', 'ttdbot', 'TTDBOT')">
+                    <div class="chat-avatar" style="background: #2196f3;">🤖</div>
+                    <div><strong>TTDBOT</strong> <span class="verified-badge">موثق</span><br><span style="color:#666;">@ttdbot</span></div>
+                </div>`;
             }
-        };
 
-        // -------------------- كائن GroupsAndChannels (بدون تغيير) --------------------
+            // 3. البحث عن بوت BotMaker
+            if ('botmaker'.includes(query)) {
+                html += `<div class="search-result-item" onclick="Chat.startPrivate('botmaker', 'botmaker', 'BotMaker')">
+                    <div class="chat-avatar" style="background: #9c27b0;">🤖</div>
+                    <div><strong>BotMaker</strong> <span style="background:#9c27b0; color:white; padding:2px 6px; border-radius:12px; font-size:10px;">صانع البوتات</span><br><span style="color:#666;">@botmaker</span></div>
+                </div>`;
+            }
+
+            // 4. البحث عن القنوات والمجموعات
+            const groupsSnap = await db.ref('groups').once('value');
+            groupsSnap.forEach(child => {
+                const g = child.val();
+                if ((g.name && g.name.toLowerCase().includes(query)) || (g.username && g.username.toLowerCase().includes(query))) {
+                    const typeLabel = g.type === 'channel' ? '📢 قناة' : '👥 مجموعة';
+                    html += `<div class="search-result-item" onclick="GroupsAndChannels.open('${g.id}')">
+                        <div class="chat-avatar" style="border-radius: ${g.type==='channel'?'8px':'50%'};">${g.type==='channel'?'📢':'👥'}</div>
+                        <div><strong>${g.name}</strong><br><span style="color:#666;">@${g.username} • ${typeLabel} • ${g.memberCount||0} عضو</span></div>
+                    </div>`;
+                }
+            });
+
+            resultsDiv.innerHTML = html || '<div style="padding:12px; color:#999;">لا توجد نتائج</div>';
+            resultsDiv.classList.add('show');
+        }
+    };
+            // -------------------- كائن GroupsAndChannels (بدون تغيير) --------------------
         const GroupsAndChannels = {
             async create() {
                 const name = document.getElementById('createName').value.trim();
@@ -1026,7 +1031,109 @@
             }
         };
 
-        // -------------------- كائن Chat --------------------
+        // -------------------- كائن BotMaker (بوت إنشاء البوتات الجديد) --------------------
+        const BotMaker = {
+            async startConversation() {
+                Chat.currentChatType = 'botmaker';
+                Chat.currentChatId = `botmaker_${currentUser.uid}`;
+                Chat.currentChatUser = { uid: 'botmaker', username: 'botmaker', fullName: 'BotMaker' };
+                Chat.openChatUI('BotMaker', '🤖', '🟢 متصل');
+
+                const container = document.getElementById('messagesContainer');
+                container.innerHTML = `
+                    <div class="message received bot-message">
+                        <div>👋 مرحباً! أنا بوت إنشاء البوتات المتقدم.</div>
+                        <div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>
+                    </div>
+                    <div class="message received bot-message">
+                        <div>📋 اختر نوع البوت الذي تريد إنشاءه:</div>
+                        <div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>
+                    </div>
+                    <div class="message received bot-message">
+                        <div>1️⃣ بوت تواصل (للمحادثات)<br>2️⃣ بوت حماية (للمجموعات)<br>3️⃣ بوت رشق (للتصويت)<br>4️⃣ بوت ردود (للردود التلقائية)</div>
+                        <div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>
+                    </div>
+                `;
+            },
+
+            async handleMessage(text) {
+                const stateRef = db.ref(`botMakerState/${currentUser.uid}`);
+                const snap = await stateRef.once('value');
+                let state = snap.val() || { step: 'awaiting_choice' };
+
+                let reply = '';
+
+                if (state.step === 'awaiting_choice') {
+                    const choice = parseInt(text);
+                    let type = '';
+                    if (choice === 1) type = 'تواصل';
+                    else if (choice === 2) type = 'حماية';
+                    else if (choice === 3) type = 'رشق';
+                    else if (choice === 4) type = 'ردود';
+                    else {
+                        reply = '❌ اختيار غير صالح. الرجاء اختيار رقم من 1 إلى 4.';
+                        await this.sendBotMessage(reply);
+                        return;
+                    }
+                    state = { step: 'awaiting_name', type };
+                    reply = `اخترت: ${type}\nالآن أرسل الاسم الذي تريده للبوت:`;
+                } else if (state.step === 'awaiting_name') {
+                    state = { step: 'awaiting_username', name: text, type: state.type };
+                    reply = `الاسم "${text}" تم حفظه.\nأرسل اسم المستخدم للبوت (يجب أن ينتهي بـ "bot"):`;
+                } else if (state.step === 'awaiting_username') {
+                    const username = text;
+                    if (!username.endsWith('bot')) {
+                        reply = '❌ اسم المستخدم يجب أن ينتهي بـ "bot". حاول مرة أخرى:';
+                    } else if (!/^[A-Za-z][A-Za-z0-9_]{4,19}$/.test(username)) {
+                        reply = '❌ اسم المستخدم غير صالح (5-20 حرف، يبدأ بحرف). حاول مرة أخرى:';
+                    } else {
+                        const check = await db.ref('usernames').child(username).once('value');
+                        if (check.exists()) {
+                            reply = '❌ اسم المستخدم مستخدم بالفعل. اختر اسماً آخر:';
+                        } else {
+                            const token = Chat.generateToken();
+                            reply = `✅ تم إنشاء البوت بنجاح!\nالنوع: ${state.type}\nالاسم: ${state.name}\nاسم المستخدم: @${username}\nالتوكن: ${token}\n\nاحتفظ بهذا التوكن لاستخدام البوت.`;
+                            await db.ref(`bots/${username}`).set({
+                                name: state.name,
+                                username,
+                                token,
+                                type: state.type,
+                                owner: currentUser.uid,
+                                createdAt: Date.now()
+                            });
+                            await db.ref(`usernames/${username}`).set('bot_' + username);
+                            state = { step: 'idle' };
+                        }
+                    }
+                } else {
+                    state = { step: 'awaiting_choice' };
+                    reply = '👋 أرسل /start لبدء إنشاء بوت جديد.';
+                }
+
+                await stateRef.set(state);
+                if (reply) await this.sendBotMessage(reply);
+            },
+
+            async sendBotMessage(text) {
+                const botMsg = {
+                    messageId: db.ref().push().key,
+                    senderId: 'botmaker',
+                    receiverId: currentUser.uid,
+                    text: text,
+                    timestamp: Date.now()
+                };
+                await db.ref(`messages/botmaker_${currentUser.uid}/${botMsg.messageId}`).set(botMsg);
+
+                const container = document.getElementById('messagesContainer');
+                const div = document.createElement('div');
+                div.className = 'message received bot-message';
+                div.innerHTML = `<div>${text}</div><div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>`;
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+            }
+        };
+
+        // -------------------- كائن Chat (معدل لدعم البوتات) --------------------
         const Chat = {
             currentChat: null,
             currentChatId: null,
@@ -1038,6 +1145,10 @@
             async startPrivate(uid, username, fullName) {
                 if (uid === 'ttdbot') {
                     this.startBotConversation();
+                    return;
+                }
+                if (uid === 'botmaker') {
+                    BotMaker.startConversation();
                     return;
                 }
 
@@ -1090,7 +1201,11 @@
                 const container = document.getElementById('messagesContainer');
                 container.innerHTML = `
                     <div class="message received bot-message">
-                        <div>👋 مرحباً! أنا بوت إنشاء البوتات. أرسل /start لتبدأ.</div>
+                        <div>👋 مرحباً! أنا بوت إنشاء البوتات.</div>
+                        <div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>
+                    </div>
+                    <div class="message received bot-message">
+                        <div>أرسل /start لبدء إنشاء بوت جديد.</div>
                         <div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>
                     </div>
                 `;
@@ -1167,6 +1282,11 @@
                     input.value = '';
                     return;
                 }
+                if (this.currentChatType === 'botmaker') {
+                    await BotMaker.handleMessage(text);
+                    input.value = '';
+                    return;
+                }
 
                 if (this.currentChatType === 'private') {
                     const msg = {
@@ -1202,8 +1322,8 @@
 
             async handleBotMessage(text) {
                 const botStateRef = db.ref(`botState/${currentUser.uid}`);
-                const stateSnap = await botStateRef.once('value');
-                let state = stateSnap.val() || { step: 'idle' };
+                const snap = await botStateRef.once('value');
+                let state = snap.val() || { step: 'idle' };
 
                 let reply = '';
 
@@ -1282,7 +1402,7 @@
             }
         };
 
-        // -------------------- تحميل قائمة المحادثات (ثابتة) --------------------
+        // -------------------- تحميل قائمة المحادثات --------------------
         let chatListListener = null;
 
         function loadChatList() {
@@ -1329,10 +1449,17 @@
                     });
                 });
 
+                // إضافة البوتات إلى قائمة المحادثات
                 conversations.set('ttdbot', {
                     id: 'ttdbot',
                     type: 'bot',
                     lastMessage: 'بوت إنشاء البوتات',
+                    timestamp: Date.now()
+                });
+                conversations.set('botmaker', {
+                    id: 'botmaker',
+                    type: 'botmaker',
+                    lastMessage: 'صانع البوتات المتقدم',
                     timestamp: Date.now()
                 });
 
@@ -1382,9 +1509,16 @@
                     div.innerHTML = `<div class="chat-avatar" style="background:#2196f3;">🤖</div>
                         <div class="chat-info">
                             <div class="chat-name"><span>TTDBOT <span class="verified-badge">موثق</span></span><span class="chat-time"></span></div>
-                            <div class="chat-last-msg">بوت إنشاء البوتات</div>
+                            <div class="chat-last-msg">${item.lastMessage}</div>
                         </div>`;
                     div.onclick = () => Chat.startPrivate('ttdbot', 'ttdbot', 'TTDBOT');
+                } else if (item.type === 'botmaker') {
+                    div.innerHTML = `<div class="chat-avatar" style="background:#9c27b0;">🤖</div>
+                        <div class="chat-info">
+                            <div class="chat-name"><span>BotMaker <span style="background:#9c27b0; color:white; padding:2px 6px; border-radius:12px; font-size:10px;">صانع البوتات</span></span><span class="chat-time"></span></div>
+                            <div class="chat-last-msg">${item.lastMessage}</div>
+                        </div>`;
+                    div.onclick = () => Chat.startPrivate('botmaker', 'botmaker', 'BotMaker');
                 }
                 container.appendChild(div);
             }
