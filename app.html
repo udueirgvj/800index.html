@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تلرفيب - مع نظام الدعم المتكامل</title>
+    <title>تلرفيب - التطبيق الرئيسي</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- ملف البوتات المنفصل -->
+    <script src="bot.js"></script>
     <style>
         * {
             margin: 0;
@@ -1113,136 +1115,7 @@
             resultsDiv.classList.add('show');
         }
     };
-            const Support = {
-            async startSupportChat() {
-                Chat.currentChatType = 'support';
-                Chat.currentChatId = `support_${currentUser.uid}`;
-                Chat.currentChatUser = { uid: SUPPORT_UID, username: SUPPORT_USERNAME, fullName: 'فريق الدعم' };
-                Chat.openChatUI('فريق الدعم', '🎧', '🟢 متصل');
-
-                const messagesRef = db.ref(`support/${currentUser.uid}/messages`);
-                Chat.messagesListener = messagesRef.orderByChild('timestamp').on('value', (snap) => {
-                    Support.displayMessages(snap);
-                });
-
-                const welcomeMsg = {
-                    messageId: db.ref().push().key,
-                    senderId: 'system',
-                    text: '👋 مرحباً بك في دعم تلرفيب! سيتم الرد عليك في أقرب وقت.',
-                    timestamp: Date.now(),
-                    system: true
-                };
-                await messagesRef.child(welcomeMsg.messageId).set(welcomeMsg);
-            },
-
-            displayMessages(snapshot) {
-                const container = document.getElementById('messagesContainer');
-                container.innerHTML = '';
-                if (!snapshot.exists()) {
-                    container.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">أرسل رسالتك الأولى للدعم</div>';
-                    return;
-                }
-                const messages = [];
-                snapshot.forEach(child => messages.push(child.val()));
-                messages.sort((a,b) => a.timestamp - b.timestamp);
-
-                messages.forEach(msg => {
-                    const div = document.createElement('div');
-                    if (msg.system) {
-                        div.className = 'message received support-message';
-                        div.innerHTML = `<div>📢 ${msg.text}</div><div class="message-time">${new Date(msg.timestamp).toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>`;
-                    } else {
-                        div.className = `message ${msg.senderId === currentUser.uid ? 'sent' : 'received'}`;
-                        if (msg.senderId === SUPPORT_UID) div.classList.add('support-message');
-                        div.innerHTML = `<div>${msg.text}</div><div class="message-time">${new Date(msg.timestamp).toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>`;
-                    }
-                    container.appendChild(div);
-                });
-                container.scrollTop = container.scrollHeight;
-            },
-
-            async openSupportPanel() {
-                document.getElementById('supportPanel').classList.add('open');
-                await this.loadSupportConversations();
-            },
-
-            closeSupportPanel() {
-                document.getElementById('supportPanel').classList.remove('open');
-            },
-
-            async loadSupportConversations() {
-                const list = document.getElementById('supportConversationsList');
-                list.innerHTML = '<div style="padding:20px; text-align:center;">جاري التحميل...</div>';
-
-                const usersSnap = await db.ref('users').once('value');
-                let html = '';
-
-                for (let child of Object.values(usersSnap.val() || {})) {
-                    const user = child;
-                    if (user.uid === currentUser.uid || user.username === SUPPORT_USERNAME) continue;
-
-                    const msgsSnap = await db.ref(`support/${user.uid}/messages`).once('value');
-                    if (msgsSnap.exists()) {
-                        let lastMsg = '', lastTime = 0;
-                        msgsSnap.forEach(msg => {
-                            if (msg.val().timestamp > lastTime) {
-                                lastMsg = msg.val().text;
-                                lastTime = msg.val().timestamp;
-                            }
-                        });
-
-                        html += `<div class="support-conversation-item" onclick="Support.openSupportChat('${user.uid}', '${user.fullName}', '${user.username}')">
-                            <div class="chat-avatar">${user.fullName.charAt(0)}</div>
-                            <div style="flex:1;">
-                                <div><strong>${user.fullName}</strong> @${user.username}</div>
-                                <div style="color:#666; font-size:13px;">${lastMsg.substring(0,30)}...</div>
-                            </div>
-                            <div class="unread-badge" style="display:none;">1</div>
-                        </div>`;
-                    }
-                }
-
-                list.innerHTML = html || '<div style="padding:20px; text-align:center;">لا توجد محادثات دعم</div>';
-            },
-
-            async openSupportChat(uid, fullName, username) {
-                this.closeSupportPanel();
-                Chat.currentChatType = 'support_staff';
-                Chat.currentChatId = `support_${uid}`;
-                Chat.currentChatUser = { uid, username, fullName };
-                Chat.openChatUI(fullName, fullName.charAt(0), '🟢 متصل');
-
-                const messagesRef = db.ref(`support/${uid}/messages`);
-                Chat.messagesListener = messagesRef.orderByChild('timestamp').on('value', (snap) => {
-                    Support.displaySupportMessages(snap);
-                });
-            },
-
-            displaySupportMessages(snapshot) {
-                const container = document.getElementById('messagesContainer');
-                container.innerHTML = '';
-                if (!snapshot.exists()) {
-                    container.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">لا توجد رسائل بعد</div>';
-                    return;
-                }
-                const messages = [];
-                snapshot.forEach(child => messages.push(child.val()));
-                messages.sort((a,b) => a.timestamp - b.timestamp);
-
-                messages.forEach(msg => {
-                    const div = document.createElement('div');
-                    if (msg.system) {
-                        div.className = 'message received support-message';
-                    } else {
-                        div.className = `message ${msg.senderId === currentUser.uid ? 'sent' : 'received'}`;
-                        if (msg.senderId === SUPPORT_UID) div.classList.add('support-message');
-                    }
-                    div.innerHTML = `<div>${msg.text}</div><div class="message-time">${new Date(msg.timestamp).toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>`;
-                    container.appendChild(div);
-                });
-                container.scrollTop = container.scrollHeight;
-            }
-        };
+            const Support = {}; // سيكون في ملف منفصل
 
         const GroupsAndChannels = {
             async create() {
@@ -1314,99 +1187,6 @@
             }
         };
 
-        const BotMaker = {
-            async startConversation() {
-                Chat.currentChatType = 'botmaker';
-                Chat.currentChatId = `botmaker_${currentUser.uid}`;
-                Chat.currentChatUser = { uid: 'botmaker', username: 'botmaker', fullName: 'BotMaker' };
-                Chat.openChatUI('BotMaker', '🤖', '🟢 متصل');
-
-                const container = document.getElementById('messagesContainer');
-                container.innerHTML = `
-                    <div class="message received bot-message"><div>👋 مرحباً! أنا بوت إنشاء البوتات المتقدم.</div><div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div></div>
-                    <div class="message received bot-message"><div>📋 اختر نوع البوت الذي تريد إنشاءه:</div><div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div></div>
-                    <div class="message received bot-message"><div>1️⃣ تواصل<br>2️⃣ حماية<br>3️⃣ رشق<br>4️⃣ ردود<br>5️⃣ تذكير<br>6️⃣ مترجم</div><div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div></div>
-                `;
-            },
-
-            async handleMessage(text) {
-                const stateRef = db.ref(`botMakerState/${currentUser.uid}`);
-                const snap = await stateRef.once('value');
-                let state = snap.val() || { step: 'awaiting_choice' };
-                let reply = '';
-
-                if (state.step === 'awaiting_choice') {
-                    const choice = parseInt(text);
-                    let type = '';
-                    if (choice === 1) type = 'تواصل';
-                    else if (choice === 2) type = 'حماية';
-                    else if (choice === 3) type = 'رشق';
-                    else if (choice === 4) type = 'ردود';
-                    else if (choice === 5) type = 'تذكير';
-                    else if (choice === 6) type = 'مترجم';
-                    else {
-                        reply = '❌ اختيار غير صالح. الرجاء اختيار رقم من 1 إلى 6.';
-                        await this.sendBotMessage(reply);
-                        return;
-                    }
-                    state = { step: 'awaiting_name', type };
-                    reply = `اخترت: ${type}\nالآن أرسل الاسم الذي تريده للبوت:`;
-                } else if (state.step === 'awaiting_name') {
-                    state = { step: 'awaiting_username', name: text, type: state.type };
-                    reply = `الاسم "${text}" تم حفظه.\nأرسل اسم المستخدم للبوت (يجب أن ينتهي بـ "bot"):`;
-                } else if (state.step === 'awaiting_username') {
-                    const username = text;
-                    if (!username.endsWith('bot')) {
-                        reply = '❌ اسم المستخدم يجب أن ينتهي بـ "bot". حاول مرة أخرى:';
-                    } else if (!/^[A-Za-z][A-Za-z0-9_]{4,19}$/.test(username)) {
-                        reply = '❌ اسم المستخدم غير صالح (5-20 حرف، يبدأ بحرف). حاول مرة أخرى:';
-                    } else {
-                        const check = await db.ref('usernames').child(username).once('value');
-                        if (check.exists()) {
-                            reply = '❌ اسم المستخدم مستخدم بالفعل. اختر اسماً آخر:';
-                        } else {
-                            const token = Chat.generateToken();
-                            reply = `✅ تم إنشاء البوت بنجاح!\nالنوع: ${state.type}\nالاسم: ${state.name}\nاسم المستخدم: @${username}\nالتوكن: ${token}\n\nاحتفظ بهذا التوكن لاستخدام البوت.`;
-                            await db.ref(`bots/${username}`).set({
-                                name: state.name,
-                                username,
-                                token,
-                                type: state.type,
-                                owner: currentUser.uid,
-                                createdAt: Date.now()
-                            });
-                            await db.ref(`usernames/${username}`).set('bot_' + username);
-                            state = { step: 'idle' };
-                        }
-                    }
-                } else {
-                    state = { step: 'awaiting_choice' };
-                    reply = '👋 أرسل /start لبدء إنشاء بوت جديد.';
-                }
-
-                await stateRef.set(state);
-                if (reply) await this.sendBotMessage(reply);
-            },
-
-            async sendBotMessage(text) {
-                const botMsg = {
-                    messageId: db.ref().push().key,
-                    senderId: 'botmaker',
-                    receiverId: currentUser.uid,
-                    text: text,
-                    timestamp: Date.now()
-                };
-                await db.ref(`messages/botmaker_${currentUser.uid}/${botMsg.messageId}`).set(botMsg);
-
-                const container = document.getElementById('messagesContainer');
-                const div = document.createElement('div');
-                div.className = 'message received bot-message';
-                div.innerHTML = `<div>${text}</div><div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>`;
-                container.appendChild(div);
-                container.scrollTop = container.scrollHeight;
-            }
-        };
-
         const Chat = {
             currentChat: null,
             currentChatId: null,
@@ -1420,15 +1200,11 @@
 
             async startPrivate(uid, username, fullName) {
                 if (uid === 'ttdbot') {
-                    this.startBotConversation();
+                    await TTDBOT.startConversation(this, currentUser, db, this.sendBotMessage.bind(this));
                     return;
                 }
                 if (uid === 'botmaker') {
-                    BotMaker.startConversation();
-                    return;
-                }
-                if (uid === SUPPORT_UID || username === SUPPORT_USERNAME) {
-                    Support.startSupportChat();
+                    await BotMaker.startConversation(this, currentUser, db, this.sendBotMessage.bind(this));
                     return;
                 }
 
@@ -1470,23 +1246,10 @@
                 return `منذ ${days} يوم`;
             },
 
-            startBotConversation() {
-                this.currentChatType = 'bot';
-                this.currentChatId = `bot_${currentUser.uid}`;
-                this.currentChatUser = { uid: 'ttdbot', username: 'ttdbot', fullName: 'TTDBOT' };
-                this.openChatUI('TTDBOT', '🤖', '🟢 الدعم والتطوير');
-                
-                const container = document.getElementById('messagesContainer');
-                container.innerHTML = `
-                    <div class="message received bot-message"><div>👋 مرحباً! أنا بوت إنشاء البوتات.</div><div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div></div>
-                    <div class="message received bot-message"><div>أرسل /start لبدء إنشاء بوت جديد.</div><div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div></div>
-                `;
-            },
-
             openChatUI(name, avatarChar, status) {
                 const nameSpan = document.getElementById('chatName');
-                if (name === 'فريق الدعم') nameSpan.innerHTML = name + ' <span class="support-badge">دعم</span>';
-                else if (name === 'TTDBOT') nameSpan.innerHTML = name + ' <span class="verified-badge">موثق</span>';
+                if (name === 'TTDBOT') nameSpan.innerHTML = name + ' <span class="verified-badge">موثق</span>';
+                else if (name === 'BotMaker') nameSpan.innerHTML = name + ' <span style="background:#9c27b0; color:white; padding:2px 6px; border-radius:12px; font-size:10px;">صانع البوتات</span>';
                 else nameSpan.innerText = name;
                 document.getElementById('chatAvatar').innerText = avatarChar;
                 document.getElementById('chatStatus').innerText = status;
@@ -1606,24 +1369,12 @@
                 if (!text || !this.currentChatId) return;
 
                 if (this.currentChatType === 'bot') {
-                    await this.handleBotMessage(text);
+                    await TTDBOT.handleMessage(text, currentUser, db, this.sendBotMessage.bind(this));
                     input.value = '';
                     return;
                 }
                 if (this.currentChatType === 'botmaker') {
-                    await BotMaker.handleMessage(text);
-                    input.value = '';
-                    return;
-                }
-                if (this.currentChatType === 'support' || this.currentChatType === 'support_staff') {
-                    const supportId = this.currentChatId.replace('support_', '');
-                    const msg = {
-                        messageId: db.ref().push().key,
-                        senderId: currentUser.uid,
-                        text: text,
-                        timestamp: Date.now()
-                    };
-                    await db.ref(`support/${supportId}/messages/${msg.messageId}`).set(msg);
+                    await BotMaker.handleMessage(text, currentUser, db, this.sendBotMessage.bind(this));
                     input.value = '';
                     return;
                 }
@@ -1663,69 +1414,23 @@
                 input.value = '';
             },
 
-            async handleBotMessage(text) {
-                const botStateRef = db.ref(`botState/${currentUser.uid}`);
-                const snap = await botStateRef.once('value');
-                let state = snap.val() || { step: 'idle' };
-                let reply = '';
-
-                if (text === '/start') {
-                    state = { step: 'awaiting_name' };
-                    reply = '🤖 مرحباً! أرسل الاسم الذي تريده للبوت:';
-                } else if (state.step === 'awaiting_name') {
-                    state = { step: 'awaiting_username', name: text };
-                    reply = `الاسم "${text}" تم حفظه.\nأرسل اسم المستخدم (ينتهي بـ "bot"):`;
-                } else if (state.step === 'awaiting_username') {
-                    const username = text;
-                    if (!username.endsWith('bot')) {
-                        reply = '❌ اسم المستخدم يجب أن ينتهي بـ "bot". حاول مرة أخرى:';
-                    } else if (!/^[A-Za-z][A-Za-z0-9_]{4,19}$/.test(username)) {
-                        reply = '❌ اسم المستخدم غير صالح (5-20 حرف). حاول مرة أخرى:';
-                    } else {
-                        const check = await db.ref('usernames').child(username).once('value');
-                        if (check.exists()) {
-                            reply = '❌ اسم المستخدم مستخدم بالفعل. اختر اسماً آخر:';
-                        } else {
-                            const token = this.generateToken();
-                            reply = `✅ تم إنشاء البوت!\nالاسم: ${state.name}\n@${username}\nالتوكن: ${token}`;
-                            await db.ref(`bots/${username}`).set({
-                                name: state.name,
-                                username,
-                                token,
-                                owner: currentUser.uid,
-                                createdAt: Date.now()
-                            });
-                            await db.ref(`usernames/${username}`).set('bot_' + username);
-                            state = { step: 'idle' };
-                        }
-                    }
-                } else {
-                    state = { step: 'awaiting_name' };
-                    reply = '👋 أرسل /start لبدء إنشاء بوت.';
-                }
-
-                await botStateRef.set(state);
+            async sendBotMessage(senderId, text) {
                 const botMsg = {
                     messageId: db.ref().push().key,
-                    senderId: 'ttdbot',
+                    senderId: senderId,
                     receiverId: currentUser.uid,
-                    text: reply,
+                    text: text,
                     timestamp: Date.now()
                 };
-                await db.ref(`messages/bot_${currentUser.uid}/${botMsg.messageId}`).set(botMsg);
+                const path = senderId === 'ttdbot' ? `bot_${currentUser.uid}` : `botmaker_${currentUser.uid}`;
+                await db.ref(`messages/${path}/${botMsg.messageId}`).set(botMsg);
+
                 const container = document.getElementById('messagesContainer');
                 const div = document.createElement('div');
                 div.className = 'message received bot-message';
-                div.innerHTML = `<div>${reply}</div><div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>`;
+                div.innerHTML = `<div>${text}</div><div class="message-time">${new Date().toLocaleTimeString('ar', {hour:'2-digit',minute:'2-digit'})}</div>`;
                 container.appendChild(div);
                 container.scrollTop = container.scrollHeight;
-            },
-
-            generateToken() {
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                let token = '';
-                for (let i = 0; i < 32; i++) token += chars.charAt(Math.floor(Math.random() * chars.length));
-                return token;
             },
 
             banUser() { alert('خاصية الحظر قيد التطوير'); },
@@ -1771,27 +1476,6 @@
                                         timestamp: msg.timestamp
                                     });
                                 }
-                            }
-                        });
-                    }
-                });
-
-                const supportSnap = await db.ref('support').once('value');
-                supportSnap.forEach(userSnap => {
-                    if (userSnap.key !== uid) {
-                        db.ref(`support/${userSnap.key}/messages`).orderByChild('timestamp').limitToLast(1).once('value', snap => {
-                            if (snap.exists()) {
-                                let lastMsg = '', lastTime = 0;
-                                snap.forEach(m => {
-                                    lastMsg = m.val().text;
-                                    lastTime = m.val().timestamp;
-                                });
-                                conversations.set(`support_${userSnap.key}`, {
-                                    id: userSnap.key,
-                                    type: 'support',
-                                    lastMessage: lastMsg,
-                                    timestamp: lastTime
-                                });
                             }
                         });
                     }
@@ -1858,19 +1542,6 @@
                             <div class="chat-last-msg">${item.lastMessage}</div>
                         </div>`;
                     div.onclick = () => GroupsAndChannels.open(group.id);
-                } else if (item.type === 'support') {
-                    const userSnap = await db.ref(`users/${item.id}`).once('value');
-                    const user = userSnap.val();
-                    if (!user) continue;
-                    div.innerHTML = `<div class="chat-avatar" style="background:#4caf50;">🎧</div>
-                        <div class="chat-info">
-                            <div class="chat-name"><span>${user.fullName} <span class="support-badge">دعم</span></span><span class="chat-time">${new Date(item.timestamp).toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})}</span></div>
-                            <div class="chat-last-msg">${item.lastMessage}</div>
-                        </div>`;
-                    div.onclick = () => {
-                        if (currentUser.username === SUPPORT_USERNAME) Support.openSupportChat(user.uid, user.fullName, user.username);
-                        else Support.startSupportChat();
-                    };
                 } else if (item.type === 'bot') {
                     div.innerHTML = `<div class="chat-avatar" style="background:#2196f3;">🤖</div>
                         <div class="chat-info">
@@ -1893,7 +1564,7 @@
 
         async function init() {
             UI.updateDrawerInfo();
-            await checkIfSupport();
+            await checkIfSupport(); // ستظل موجودة لكن Support سيكون فارغاً
             loadChatList();
         }
         init();
