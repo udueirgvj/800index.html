@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>تلرفيب - التطبيق</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- ربط ملف التنسيقات (يمكنك وضع التنسيقات هنا أو في ملف منفصل) -->
     <style>
         * {
             margin: 0;
@@ -64,7 +62,7 @@
             padding: 10px 20px;
             background: white;
             border-bottom: 1px solid #eee;
-            display: none; /* مخفي افتراضياً */
+            display: none;
         }
         .search-bar.show {
             display: block;
@@ -104,7 +102,7 @@
         .drawer {
             position: absolute;
             top: 0;
-            right: -280px; /* مخفية خارج الشاشة */
+            right: -280px;
             width: 280px;
             height: 100%;
             background: white;
@@ -115,7 +113,7 @@
             padding: 20px;
         }
         .drawer.open {
-            right: 0; /* تظهر عند الضغط */
+            right: 0;
         }
         .drawer-header {
             display: flex;
@@ -390,10 +388,10 @@
             display: flex;
             flex-direction: column;
             transition: transform 0.3s;
-            transform: translateY(100%); /* مخفية */
+            transform: translateY(100%);
         }
         .modal.open {
-            transform: translateY(0); /* تظهر عند الطلب */
+            transform: translateY(0);
         }
         .modal-header {
             display: flex;
@@ -445,15 +443,55 @@
             z-index: 50;
         }
 
-        .hidden {
-            display: none !important;
+        /* واجهة الدردشة الفارغة */
+        .empty-chat-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: #f9f9f9;
+            padding: 20px;
         }
-        .error {
-            color: #e74c3c;
-            font-size: 13px;
-            margin: 5px 0;
+        .empty-chat-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            margin-bottom: 20px;
         }
+        .empty-chat-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .empty-chat-status {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .empty-chat-message {
+            text-align: center;
+            color: #999;
+            font-size: 16px;
+        }
+        .empty-chat-message small {
+            display: block;
+            margin-top: 8px;
+            color: #ccc;
+        }
+
+        .hidden { display: none !important; }
+        .error { color: #e74c3c; font-size: 13px; margin: 5px 0; }
     </style>
+    <!-- استدعاء loader.js الذي يقوم بتحميل جميع ملفات JS المنفصلة -->
+    <script src="loader.js"></script>
 </head>
 <body>
     <div id="app">
@@ -484,6 +522,7 @@
             <div class="drawer-menu-item" onclick="UI.editUsername()">🆔 تغيير اسم المستخدم</div>
             <div class="drawer-menu-item" onclick="UI.toggleDarkMode()">🌙 الوضع الداكن</div>
             <div class="drawer-menu-item" onclick="UI.showSettings('counters')">📊 العدادات</div>
+            <div class="drawer-menu-item" onclick="Support.openSupportPanel()" id="supportMenuItem" style="display:none;">🎧 لوحة الدعم</div>
             <div class="drawer-menu-item" onclick="Auth.logout()">🚪 تسجيل خروج</div>
         </div>
 
@@ -584,135 +623,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        // -------------------- Firebase Config --------------------
-        const firebaseConfig = {
-            apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79N0",
-            authDomain: "tttrt-b8c5a.firebaseapp.com",
-            databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "tttrt-b8c5a",
-            storageBucket: "tttrt-b8c5a.appspot.com",
-            messagingSenderId: "975123752593",
-            appId: "1:975123752593:web:e591e930af101968875560"
-        };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        // -------------------- Current User --------------------
-        let currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser) window.location.href = 'index.html';
-
-        // -------------------- UI Object --------------------
-        const UI = {
-            toggleDrawer() {
-                document.getElementById('drawer').classList.toggle('open');
-                document.getElementById('drawerOverlay').classList.toggle('open');
-            },
-            closeDrawer() {
-                document.getElementById('drawer').classList.remove('open');
-                document.getElementById('drawerOverlay').classList.remove('open');
-            },
-            toggleSearch() {
-                const sb = document.getElementById('searchBar');
-                sb.classList.toggle('show');
-            },
-            openCreateModal() {
-                document.getElementById('createModal').classList.add('open');
-            },
-            closeCreateModal() {
-                document.getElementById('createModal').classList.remove('open');
-            },
-            openCountersMenu() {
-                document.getElementById('countersMenu').classList.add('open');
-            },
-            closeCountersMenu() {
-                document.getElementById('countersMenu').classList.remove('open');
-            },
-            countersAction(action) {
-                alert(`قيد التطوير: ${action}`);
-                this.closeCountersMenu();
-            },
-            showSettings(type) {
-                if (type === 'counters') this.openCountersMenu();
-                else alert(`إعدادات ${type}`);
-                this.closeDrawer();
-            },
-            updateDrawerInfo() {
-                document.getElementById('drawerFullName').innerText = currentUser.fullName;
-                document.getElementById('drawerUsername').innerText = '@' + currentUser.username;
-            },
-            changePhoto() { alert('تغيير الصورة قيد التطوير'); },
-            editName() {
-                const newName = prompt('الاسم الجديد:', currentUser.fullName);
-                if (newName && newName.trim()) {
-                    currentUser.fullName = newName.trim();
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    this.updateDrawerInfo();
-                }
-                this.closeDrawer();
-            },
-            editUsername() { alert('تغيير اسم المستخدم قيد التطوير'); this.closeDrawer(); },
-            toggleDarkMode() { document.body.classList.toggle('dark-mode'); this.closeDrawer(); },
-            closeProfile() { document.getElementById('profileModal').classList.remove('open'); },
-            closeForwardModal() { document.getElementById('forwardModal').classList.remove('open'); },
-            openProfileFromChat() {}
-        };
-
-        // -------------------- Auth --------------------
-        const Auth = {
-            logout() {
-                localStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
-            }
-        };
-
-        // -------------------- Search (مبسط) --------------------
-        const Search = {
-            async handle() {
-                // تنفيذ البحث...
-            }
-        };
-        document.getElementById('searchInput').addEventListener('keyup', Search.handle);
-
-        // -------------------- GroupsAndChannels (مبسط) --------------------
-        const GroupsAndChannels = {
-            async create() {
-                alert('سيتم إنشاء المجموعة/القناة');
-                UI.closeCreateModal();
-            }
-        };
-
-        // -------------------- Chat (مبسط) --------------------
-        const Chat = {
-            close() { document.getElementById('chatRoom').classList.remove('open'); },
-            async sendMessage() {}
-        };
-
-        // -------------------- Support --------------------
-        const Support = {
-            openSupportPanel() { document.getElementById('supportPanel').classList.add('open'); },
-            closeSupportPanel() { document.getElementById('supportPanel').classList.remove('open'); }
-        };
-
-        // -------------------- Channel --------------------
-        const Channel = {
-            open() { alert('قناة المطور'); }
-        };
-
-        // -------------------- التهيئة والإخفاء التلقائي --------------------
-        window.addEventListener('load', function() {
-            // إخفاء جميع النوافذ المنبثقة
-            document.querySelectorAll('.modal').forEach(el => el.classList.remove('open'));
-            // إغلاق القائمة الجانبية
-            document.getElementById('drawer')?.classList.remove('open');
-            document.getElementById('drawerOverlay')?.classList.remove('open');
-            // إخفاء شريط البحث
-            document.getElementById('searchBar')?.classList.remove('show');
-        });
-
-        // تحديث معلومات القائمة الجانبية
-        UI.updateDrawerInfo();
-    </script>
 </body>
 </html>
