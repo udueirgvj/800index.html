@@ -18,3 +18,5 @@ function loadScript(index) {
     document.head.appendChild(script);
 }
 loadScript(0);
+
+console.log('تم تحميل جميع الملفات');
