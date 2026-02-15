@@ -1,34 +1,75 @@
-let currentUser = JSON.parse(localStorage.getItem('currentUser'));
-if (!currentUser) { window.location.href = 'index.html'; }
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تلرفيب - التطبيق (نسخة بسيطة)</title>
+    <style>
+        body {
+            background: #667eea;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 10px;
+        }
+        #app {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 5px 0;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        .logout {
+            background: #e74c3c;
+            margin-top: 20px;
+        }
+        .logout:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>تلرفيب</h1>
+        <button onclick="alert('فتح القائمة الجانبية')">☰ القائمة الجانبية</button>
+        <button onclick="alert('فتح البحث')">🔍 بحث</button>
+        <button onclick="alert('فتح نافذة الإنشاء')">+ إنشاء</button>
+        <button onclick="alert('فتح لوحة الدعم')">🎧 الدعم</button>
+        <button class="logout" onclick="logout()">🚪 تسجيل خروج</button>
+    </div>
 
-const UI = {
-    toggleDrawer() {
-        document.getElementById('drawer').classList.toggle('open');
-        document.getElementById('drawerOverlay').classList.toggle('open');
-    },
-    closeDrawer() {
-        document.getElementById('drawer').classList.remove('open');
-        document.getElementById('drawerOverlay').classList.remove('open');
-    },
-    toggleSearch() { document.getElementById('searchBar').classList.toggle('show'); },
-    openCreateModal() { document.getElementById('createModal').classList.add('open'); },
-    closeCreateModal() { document.getElementById('createModal').classList.remove('open'); },
-    openCountersMenu() { document.getElementById('countersMenu').classList.add('open'); },
-    closeCountersMenu() { document.getElementById('countersMenu').classList.remove('open'); },
-    countersAction(action) { alert(action); this.closeCountersMenu(); },
-    showSettings(type) { if (type === 'counters') this.openCountersMenu(); else alert(type); this.closeDrawer(); },
-    editName() { alert('تعديل الاسم'); this.closeDrawer(); },
-    editUsername() { alert('تعديل اسم المستخدم'); this.closeDrawer(); },
-    toggleDarkMode() { document.body.classList.toggle('dark-mode'); this.closeDrawer(); },
-    changePhoto() { alert('تغيير الصورة'); },
-    updateDrawerInfo() { if (currentUser) { document.getElementById('drawerFullName').innerText = currentUser.fullName; document.getElementById('drawerUsername').innerText = '@' + currentUser.username; } },
-    closeProfile() { document.getElementById('profileModal')?.classList.remove('open'); }
-};
+    <script>
+        // محاكاة مستخدم وهمي (للتجربة فقط)
+        let currentUser = { fullName: 'مستخدم تجريبي', username: 'test' };
 
-const Auth = { logout() { localStorage.removeItem('currentUser'); window.location.href = 'index.html'; } };
-const Channel = { open() { alert('قناة المطور'); } };
-alert('✅ تم تحميل app.js بنجاح');
-
-UI.updateDrawerInfo();
-
-
+        function logout() {
+            alert('تم تسجيل الخروج');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
