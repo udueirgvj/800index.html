@@ -128,13 +128,13 @@
             <p>مرحباً بك مجدداً</p>
         </div>
 
-        <!-- Tabs: تسجيل الدخول / إنشاء حساب -->
+        <!-- Tabs -->
         <div class="tab-container">
             <div class="tab active" id="loginTab" onclick="switchTab('login')">تسجيل الدخول</div>
             <div class="tab" id="signupTab" onclick="switchTab('signup')">إنشاء حساب</div>
         </div>
 
-        <!-- نموذج تسجيل الدخول -->
+        <!-- Login Form -->
         <div id="loginForm">
             <div class="input-group">
                 <label>البريد الإلكتروني</label>
@@ -148,7 +148,7 @@
             <button class="action-btn" onclick="handleLogin()">دخول</button>
         </div>
 
-        <!-- نموذج إنشاء حساب -->
+        <!-- Signup Form -->
         <div id="signupForm" class="hidden">
             <div class="input-group">
                 <label>الاسم الشخصي</label>
@@ -157,7 +157,7 @@
             <div class="input-group">
                 <label>اسم المستخدم</label>
                 <input type="text" id="signupUsername" placeholder="mohammed" dir="ltr">
-                <small style="color:#999;">5-20 حرف، أحرف إنجليزية وأرقام فقط</small>
+                <small style="color:#999;">5-20 حرف، أحرف إنجليزية وأرقام و_ فقط، يبدأ بحرف</small>
             </div>
             <div class="input-group">
                 <label>البريد الإلكتروني</label>
@@ -188,7 +188,9 @@
             messagingSenderId: "975123752593",
             appId: "1:975123752593:web:e591e930af101968875560"
         };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.database();
         const auth = firebase.auth();
 
@@ -218,8 +220,8 @@
 
         // -------------------- التحقق من عدم تكرار اسم المستخدم --------------------
         async function isUsernameAvailable(username) {
-            const snap = await db.ref('usernames').child(username).once('value');
-            return !snap.exists();
+            const snapshot = await db.ref('usernames').child(username).once('value');
+            return !snapshot.exists();
         }
 
         // -------------------- إنشاء حساب جديد --------------------
@@ -230,16 +232,17 @@
             const password = document.getElementById('signupPassword').value.trim();
             const confirm = document.getElementById('signupConfirm').value.trim();
 
-            // مسح الأخطاء
+            // مسح الأخطاء السابقة
             document.getElementById('signupError').innerText = '';
             document.getElementById('signupSuccess').innerText = '';
 
+            // التحقق من المدخلات
             if (!fullName || !username || !email || !password || !confirm) {
                 document.getElementById('signupError').innerText = 'جميع الحقول مطلوبة';
                 return;
             }
             if (!isValidUsername(username)) {
-                document.getElementById('signupError').innerText = 'اسم المستخدم: 5-20 حرف، يبدأ بحرف إنجليزي';
+                document.getElementById('signupError').innerText = 'اسم المستخدم: 5-20 حرف، يبدأ بحرف إنجليزي، وأحرف إنجليزية وأرقام و_ فقط';
                 return;
             }
             if (password.length < 6) {
@@ -259,8 +262,10 @@
             }
 
             try {
+                // إنشاء المستخدم في Firebase Authentication
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
+
                 // إرسال بريد التحقق
                 await user.sendEmailVerification();
 
@@ -274,7 +279,8 @@
                     bio: '',
                     emailVerified: false,
                     createdAt: new Date().toISOString(),
-                    lastLogin: new Date().toISOString()
+                    lastLogin: new Date().toISOString(),
+                    subscribedChannel: false
                 };
                 await db.ref(`users/${user.uid}`).set(userData);
                 await db.ref(`usernames/${username}`).set(user.uid);
@@ -282,7 +288,9 @@
                 // تسجيل الخروج فوراً حتى يتم تفعيل البريد
                 await auth.signOut();
 
+                // عرض رسالة نجاح
                 document.getElementById('signupSuccess').innerText = 'تم إنشاء الحساب! الرجاء تفعيل البريد الإلكتروني.';
+
                 // تنظيف الحقول
                 document.getElementById('signupFullName').value = '';
                 document.getElementById('signupUsername').value = '';
