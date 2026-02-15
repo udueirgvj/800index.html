@@ -1,39 +1,150 @@
-let currentUser = JSON.parse(localStorage.getItem('currentUser'));
-if (!currentUser) { window.location.href = 'index.html'; }
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تيلرفيب</title>
 
-const UI = {
-    toggleDrawer() {
-        document.getElementById('drawer').classList.toggle('open');
-        document.getElementById('drawerOverlay').classList.toggle('open');
-    },
-    closeDrawer() {
-        document.getElementById('drawer').classList.remove('open');
-        document.getElementById('drawerOverlay').classList.remove('open');
-    },
-    toggleSearch() {
-        document.getElementById('searchBar').classList.toggle('show');
-    },
-    openCreateModal() { document.getElementById('createModal').classList.add('open'); },
-    closeCreateModal() { document.getElementById('createModal').classList.remove('open'); },
-    openCountersMenu() { document.getElementById('countersMenu').classList.add('open'); },
-    closeCountersMenu() { document.getElementById('countersMenu').classList.remove('open'); },
-    countersAction(action) { alert('قيد التطوير: ' + action); this.closeCountersMenu(); },
-    showSettings(type) { if (type === 'counters') this.openCountersMenu(); else alert(type); this.closeDrawer(); },
-    updateDrawerInfo() { /* مؤقتاً */ },
-    changePhoto() { alert('تغيير الصورة'); },
-    editName() { alert('تعديل الاسم'); this.closeDrawer(); },
-    editUsername() { alert('تعديل اسم المستخدم'); this.closeDrawer(); },
-    toggleDarkMode() { document.body.classList.toggle('dark-mode'); this.closeDrawer(); },
-    closeProfile() { document.getElementById('profileModal').classList.remove('open'); },
-    closeForwardModal() { document.getElementById('forwardModal').classList.remove('open'); },
-    openProfileFromChat() {}
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0f172a;
+    color:white;
+}
+
+/* الشريط العلوي */
+.header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#1e293b;
+    padding:10px;
+}
+
+.menu-btn, .search-btn{
+    font-size:22px;
+    cursor:pointer;
+}
+
+.app-title{
+    font-size:18px;
+    font-weight:bold;
+}
+
+/* صندوق البحث */
+.search-box{
+    display:none;
+    padding:10px;
+    background:#020617;
+}
+
+.search-box input{
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    border:none;
+}
+
+/* قائمة الدردشة */
+.chat-list{
+    padding:10px;
+}
+
+.chat{
+    padding:12px;
+    border-bottom:1px solid #1f2937;
+    cursor:pointer;
+}
+
+.chat:hover{
+    background:#1e293b;
+}
+
+/* القائمة الجانبية */
+.side-menu{
+    position:fixed;
+    top:0;
+    right:-250px;
+    width:250px;
+    height:100%;
+    background:#020617;
+    transition:0.3s;
+    padding:15px;
+}
+
+.side-menu a{
+    display:block;
+    padding:10px;
+    color:white;
+    text-decoration:none;
+}
+
+.side-menu a:hover{
+    background:#1e293b;
+}
+</style>
+</head>
+
+<body>
+
+<!-- الشريط العلوي -->
+<div class="header">
+    <div class="menu-btn" onclick="openMenu()">☰</div>
+    <div class="app-title">تيلرفيب</div>
+    <div class="search-btn" onclick="toggleSearch()">🔍</div>
+</div>
+
+<!-- البحث -->
+<div class="search-box" id="searchBox">
+    <input type="text" placeholder="بحث...">
+</div>
+
+<!-- قائمة المحادثات -->
+<div class="chat-list">
+    <div class="chat">محادثة 1</div>
+    <div class="chat">محادثة 2</div>
+    <div class="chat">محادثة 3</div>
+</div>
+
+<!-- القائمة الجانبية -->
+<div class="side-menu" id="menu">
+    <h3>القائمة</h3>
+    <a href="#">الملف الشخصي</a>
+    <a href="#">الإعدادات</a>
+    <a href="#">تسجيل خروج</a>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  databaseURL: "YOUR_DB",
+  projectId: "YOUR_ID",
 };
 
-const Auth = { logout() { localStorage.removeItem('currentUser'); window.location.href = 'index.html'; } };
-const Search = { handle() { alert('بحث'); } };
-const GroupsAndChannels = { create() { alert('إنشاء'); UI.closeCreateModal(); } };
-const Chat = { close() { document.getElementById('chatRoom').classList.remove('open'); }, sendMessage() {} };
-const Support = { openSupportPanel() { document.getElementById('supportPanel').classList.add('open'); }, closeSupportPanel() { document.getElementById('supportPanel').classList.remove('open'); } };
-const Channel = { open() { alert('قناة المطور'); } };
+firebase.initializeApp(firebaseConfig);
 
-document.getElementById('searchInput').addEventListener('keyup', Search.handle);
+/* وظائف الأزرار */
+function toggleSearch(){
+    let box = document.getElementById("searchBox");
+    box.style.display = box.style.display === "block" ? "none" : "block";
+}
+
+function openMenu(){
+    document.getElementById("menu").style.right = "0";
+}
+
+document.body.addEventListener("click", function(e){
+    if(!e.target.closest(".menu-btn") && !e.target.closest(".side-menu")){
+        document.getElementById("menu").style.right = "-250px";
+    }
+});
+</script>
+
+</body>
+</html>
