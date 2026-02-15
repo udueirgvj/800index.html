@@ -2,34 +2,142 @@
 <html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اختبار التحميل</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تلرفيب - التطبيق</title>
     <style>
-        body {
-            background: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: sans-serif;
-        }
-        button {
-            padding: 20px 40px;
-            font-size: 24px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        button:hover {
-            background: #5a67d8;
-        }
+        /* (يمكنك نسخ التنسيقات من الرد السابق إذا أردت، أو تركها بسيطة للاختبار) */
+        * { margin:0; padding:0; box-sizing:border-box; font-family:sans-serif; }
+        body { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); display:flex; justify-content:center; align-items:center; min-height:100vh; }
+        #app { width:100%; max-width:500px; height:700px; background:white; border-radius:20px; position:relative; overflow:hidden; display:flex; flex-direction:column; }
+        .top-bar { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#667eea; color:white; }
+        .app-name { font-size:20px; font-weight:bold; }
+        .menu-icon, .search-icon { font-size:24px; cursor:pointer; width:30px; height:30px; display:flex; align-items:center; justify-content:center; }
+        .search-bar { padding:10px 20px; background:white; border-bottom:1px solid #eee; display:none; }
+        .search-bar.show { display:block; }
+        .drawer { position:absolute; top:0; right:-280px; width:280px; height:100%; background:white; transition:right 0.3s; z-index:1000; padding:20px; }
+        .drawer.open { right:0; }
+        .main-content { flex:1; overflow-y:auto; padding:10px; background:#f0f2f5; }
+        .channel-card { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:15px; border-radius:12px; margin-bottom:15px; display:flex; align-items:center; gap:10px; cursor:pointer; }
+        .chat-list { display:flex; flex-direction:column; gap:5px; }
+        .fab { position:absolute; bottom:20px; right:20px; width:56px; height:56px; border-radius:50%; background:#667eea; color:white; font-size:30px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:50; }
+        .modal { position:absolute; top:0; left:0; width:100%; height:100%; background:white; z-index:200; transition:transform 0.3s; transform:translateY(100%); }
+        .modal.open { transform:translateY(0); }
+        .modal-header { display:flex; align-items:center; gap:15px; padding:15px; background:#667eea; color:white; }
+        .modal-content { padding:20px; }
+        .chat-room { position:absolute; top:0; left:0; width:100%; height:100%; background:white; z-index:100; transition:transform 0.3s; transform:translateX(100%); }
+        .chat-room.open { transform:translateX(0); }
+        .chat-header { display:flex; align-items:center; gap:15px; padding:15px; background:#667eea; color:white; }
+        .messages-container { flex:1; overflow-y:auto; padding:15px; background:#f9f9f9; }
+        .chat-input-area { display:flex; gap:10px; padding:15px; background:white; border-top:1px solid #eee; }
+        #messageInput { flex:1; padding:12px; border:1px solid #ddd; border-radius:25px; }
+        #sendBtn { background:#667eea; color:white; border:none; width:50px; height:50px; border-radius:50%; cursor:pointer; }
+        .hidden { display:none !important; }
     </style>
+    <!-- استدعاء جميع ملفات JavaScript من مجلد js (بالتسلسل) -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/bots.js"></script>
+    <script src="js/support.js"></script>
+    <script src="js/groups.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/app.js"></script>
 </head>
 <body>
-    <button onclick="test()">اضغط هنا للاختبار</button>
-    <script src="js/test.js"></script>
+    <div id="app">
+        <!-- الشريط العلوي -->
+        <div class="top-bar">
+            <div class="menu-icon" onclick="UI.toggleDrawer()">☰</div>
+            <div class="app-name">تلرفيب</div>
+            <div class="search-icon" onclick="UI.toggleSearch()">🔍</div>
+        </div>
+
+        <!-- شريط البحث -->
+        <div id="searchBar" class="search-bar">
+            <input type="text" id="searchInput" placeholder="ابحث عن مستخدم...">
+        </div>
+
+        <!-- القائمة الجانبية -->
+        <div id="drawerOverlay" class="drawer-overlay" onclick="UI.closeDrawer()" style="display:none;"></div>
+        <div id="drawer" class="drawer">
+            <div class="drawer-header">
+                <div id="drawerAvatar" onclick="UI.changePhoto()">👤</div>
+                <div>
+                    <div id="drawerFullName">الاسم</div>
+                    <div id="drawerUsername">@username</div>
+                </div>
+            </div>
+            <div onclick="UI.editName()">✏️ تغيير الاسم</div>
+            <div onclick="UI.editUsername()">🆔 تغيير اسم المستخدم</div>
+            <div onclick="UI.toggleDarkMode()">🌙 الوضع الداكن</div>
+            <div onclick="UI.showSettings('counters')">📊 العدادات</div>
+            <div onclick="Support.openSupportPanel()">🎧 الدعم</div>
+            <div onclick="Auth.logout()">🚪 تسجيل خروج</div>
+        </div>
+
+        <!-- المحتوى الرئيسي -->
+        <div id="mainContent" class="main-content">
+            <div class="channel-card" onclick="Channel.open()">
+                <span>📢 المطور تطبيق</span>
+                <span>700K+</span>
+            </div>
+            <div id="chatListContainer" class="chat-list"></div>
+        </div>
+
+        <!-- زر الإضافة العائم -->
+        <div class="fab" onclick="UI.openCreateModal()">+</div>
+
+        <!-- نافذة إنشاء مجموعة/قناة -->
+        <div id="createModal" class="modal">
+            <div class="modal-header">
+                <div onclick="UI.closeCreateModal()">←</div>
+                <div>إنشاء مجموعة/قناة</div>
+            </div>
+            <div class="modal-content">
+                <input type="text" id="createName" placeholder="الاسم">
+                <input type="text" id="createUsername" placeholder="اسم المستخدم">
+                <select id="createType">
+                    <option value="group">مجموعة</option>
+                    <option value="channel">قناة</option>
+                </select>
+                <button onclick="GroupsAndChannels.create()">إنشاء</button>
+            </div>
+        </div>
+
+        <!-- نافذة العدادات -->
+        <div id="countersMenu" class="modal">
+            <div class="modal-header">
+                <div onclick="UI.closeCountersMenu()">←</div>
+                <div>📊 القائمة</div>
+            </div>
+            <div class="modal-content">
+                <div onclick="UI.countersAction('blocked')">🚫 المحظورين</div>
+                <div onclick="UI.countersAction('sessions')">📱 الجلسات</div>
+                <div onclick="UI.countersAction('privacy')">🔒 الخصوصية</div>
+                <div onclick="UI.countersAction('storage')">💾 التخزين</div>
+            </div>
+        </div>
+
+        <!-- لوحة الدعم -->
+        <div id="supportPanel" class="modal">
+            <div class="modal-header">
+                <div onclick="Support.closeSupportPanel()">←</div>
+                <div>🎧 لوحة الدعم</div>
+            </div>
+            <div id="supportConversationsList"></div>
+        </div>
+
+        <!-- غرفة الدردشة -->
+        <div id="chatRoom" class="chat-room">
+            <div class="chat-header">
+                <div onclick="Chat.close()">←</div>
+                <div id="chatName"></div>
+            </div>
+            <div id="messagesContainer"></div>
+            <div class="chat-input-area">
+                <input type="text" id="messageInput" placeholder="اكتب رسالة...">
+                <button onclick="Chat.sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
