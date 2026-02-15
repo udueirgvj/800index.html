@@ -1,4 +1,4 @@
-// ========== إعدادات Firebase ==========
+// ==================== firebase-config.js ====================
 const firebaseConfig = {
     apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79N0",
     authDomain: "tttrt-b8c5a.firebaseapp.com",
@@ -6,17 +6,12 @@ const firebaseConfig = {
     projectId: "tttrt-b8c5a",
     storageBucket: "tttrt-b8c5a.appspot.com",
     messagingSenderId: "975123752593",
-    appId: "1:975123752593:web:e591e930af101968875560",
-    measurementId: "G-VJVEB51FEW"
+    appId: "1:975123752593:web:e591e930af101968875560"
 };
 
-// تهيئة Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-
-// مرجع قاعدة البيانات
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const auth = firebase.auth();
 
-// تصدير المتغيرات للاستخدام في الملفات الأخرى
 window.db = db;
+window.auth = auth;
