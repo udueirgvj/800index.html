@@ -1,4 +1,4 @@
-// loader.js - تحميل الملفات بالتسلسل
+// loader.js
 const files = [
     'js/firebase-config.js',
     'js/auth.js',
