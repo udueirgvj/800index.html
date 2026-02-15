@@ -623,6 +623,17 @@
                 <button id="sendBtn" onclick="Chat.sendMessage()">➤</button>
             </div>
         </div>
-    </div>
+  
+</div>
+<script>
+    setTimeout(function() {
+        if (typeof UI === 'undefined') {
+            alert('❌ UI غير موجود!');
+        } else {
+            alert('✅ UI موجود');
+        }
+    }, 3000);
+</script>
 </body>
 </html>
+
