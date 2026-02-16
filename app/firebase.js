@@ -1,10 +1,4 @@
-// Firebase Modules
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-
-// 🔴 بيانات مشروعك (وضعتها لك من الصورة)
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79N0",
   authDomain: "tttrt-b8c5a.firebaseapp.com",
@@ -12,20 +6,38 @@ const firebaseConfig = {
   projectId: "tttrt-b8c5a",
   storageBucket: "tttrt-b8c5a.appspot.com",
   messagingSenderId: "975123752593",
-  appId: "1:975123752593:web:e591e930af101968875560",
-  measurementId: "G-VJVEB51FEW"
+  appId: "1:975123752593:web:e591e930af101968875560"
 };
 
+// تشغيل Firebase
+firebase.initializeApp(firebaseConfig);
 
-// تشغيل فايربيس
-const app = initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
 
-// المصادقة (تسجيل الدخول)
-const auth = getAuth(app);
+/* مراقبة تسجيل الدخول (هذا هو الجزء المهم) */
+auth.onAuthStateChanged(function(user) {
 
-// قاعدة البيانات
-const db = getDatabase(app);
+  // اذا المستخدم مسجل دخول
+  if (user) {
 
+    // لو نحن في صفحة login او register → اذهب للرئيسية
+    if (
+      location.pathname.includes("login") ||
+      location.pathname.includes("register") ||
+      location.pathname.includes("index")
+    ) {
+      window.location.href = "chat.html";
+    }
 
-// نصدرهم لباقي الملفات
-export { auth, db };
+  } 
+  // اذا غير مسجل
+  else {
+
+    // لو فتح صفحة الشات بدون تسجيل
+    if (location.pathname.includes("chat.html")) {
+      window.location.href = "login.html";
+    }
+
+  }
+});
