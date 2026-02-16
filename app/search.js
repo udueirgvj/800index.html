@@ -1,55 +1,47 @@
-function openSearch(){
-document.getElementById("searchBox").style.display="block";
-}
-
-function closeSearch(){
-document.getElementById("searchBox").style.display="none";
-}
-
-const input = document.getElementById("searchInput");
+const searchBtn = document.getElementById("searchBtn");
+const searchBox = document.getElementById("searchBox");
+const searchInput = document.getElementById("searchInput");
 const results = document.getElementById("results");
 
-input.addEventListener("input", function(){
-
-let name = input.value.trim().toLowerCase();
-
-results.innerHTML="";
-
-if(name.length < 3) return;
-
-// البحث داخل usernames
-db.ref("usernames").once("value", snap => {
-
-snap.forEach(child => {
-
-let username = child.key;
-
-if(username.includes(name)){
-
-let div = document.createElement("div");
-div.className="userResult";
-div.innerHTML="👤 @" + username;
-
-div.onclick = function(){
-startChat(username);
+searchBtn.onclick = () => {
+    searchBox.style.display = "block";
+    searchInput.focus();
 };
 
-results.appendChild(div);
-
+function closeSearch(){
+    searchBox.style.display = "none";
+    results.innerHTML = "";
+    searchInput.value = "";
 }
 
-});
+/* البحث عند الكتابة */
+searchInput.oninput = async () => {
 
-});
+    let username = searchInput.value.trim().toLowerCase();
 
-});
+    if(username.length < 3){
+        results.innerHTML = "";
+        return;
+    }
 
-function startChat(username){
+    // إزالة @ لو كتبها المستخدم
+    username = username.replace("@","");
 
-localStorage.setItem("chatWith", username);
-document.getElementById("welcome").style.display="none";
-document.getElementById("chatPage").style.display="flex";
-document.getElementById("chatHeader").innerText="@" + username;
+    const snap = await db.ref("usernames/" + username).once("value");
 
-loadMessages(username);
-}
+    if(!snap.exists()){
+        results.innerHTML = `<div class="userResult">لا يوجد مستخدم</div>`;
+        return;
+    }
+
+    const uid = snap.val();
+
+    const userSnap = await db.ref("users/" + uid).once("value");
+    const user = userSnap.val();
+
+    results.innerHTML = `
+        <div class="userResult" onclick="openChat('${uid}','${user.username}')">
+        👤 @${user.username}
+        </div>
+    `;
+};
