@@ -1,35 +1,36 @@
-const searchInput = document.getElementById("searchInput");
+function openSearch(){
+document.getElementById("searchBox").style.display="block";
+}
+
+function closeSearch(){
+document.getElementById("searchBox").style.display="none";
+}
+
+const input = document.getElementById("searchInput");
 const results = document.getElementById("results");
 
-/* البحث عند الكتابة */
-searchInput.oninput = function(){
+input.addEventListener("input", function(){
 
-let value = searchInput.value.toLowerCase();
+let name = input.value.trim().toLowerCase();
 
 results.innerHTML="";
 
-if(value.length < 2) return;
+if(name.length < 3) return;
 
-db.ref("users").once("value",snap=>{
+// البحث داخل usernames
+db.ref("usernames").once("value", snap => {
 
-snap.forEach(child=>{
+snap.forEach(child => {
 
 let username = child.key;
 
-if(username.includes(value) && username !== currentUser){
+if(username.includes(name)){
 
-let div=document.createElement("div");
+let div = document.createElement("div");
+div.className="userResult";
+div.innerHTML="👤 @" + username;
 
-div.style.padding="12px";
-div.style.background="#1e293b";
-div.style.margin="6px 0";
-div.style.borderRadius="10px";
-div.style.cursor="pointer";
-
-div.innerHTML="👤 "+username;
-
-/* عند الضغط يبدأ محادثة */
-div.onclick=function(){
+div.onclick = function(){
 startChat(username);
 };
 
@@ -41,4 +42,14 @@ results.appendChild(div);
 
 });
 
-};
+});
+
+function startChat(username){
+
+localStorage.setItem("chatWith", username);
+document.getElementById("welcome").style.display="none";
+document.getElementById("chatPage").style.display="flex";
+document.getElementById("chatHeader").innerText="@" + username;
+
+loadMessages(username);
+}
