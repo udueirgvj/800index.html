@@ -1,22 +1,29 @@
-<!-- Firebase core -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+// Firebase Config
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-<!-- Auth -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
-<!-- Database -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-<script>
-var firebaseConfig = {
-  apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79NC6G_xGLznBJc",
-  authDomain: "tttrt-b8c5a.firebaseapp.com",
-  databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "tttrt-b8c5a",
-  storageBucket: "tttrt-b8c5a.appspot.com",
-  messagingSenderId: "975123752593",
-  appId: "1:975123752593:web:e591e930af3a3e29568130"
+const firebaseConfig = {
+  apiKey: "ضع_مفتاحك",
+  authDomain: "ضع_الدومين.firebaseapp.com",
+  databaseURL: "ضع_databaseURL",
+  projectId: "ضع_projectId",
+  storageBucket: "ضع_storage",
+  messagingSenderId: "ضع_sender",
+  appId: "ضع_appId"
 };
 
-firebase.initializeApp(firebaseConfig);
-</script>
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getDatabase(app);
+
+
+// ⭐ هذا هو الحل الحقيقي ⭐
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // اذا كان المستخدم مسجل دخول انقله للتطبيق
+    if (location.pathname.includes("login") || location.pathname.includes("register")) {
+      window.location.href = "/80c/app/index.html";
+    }
+  }
+});
