@@ -7,129 +7,93 @@
 
 <style>
 body{
-    background:#0b1622;
-    font-family:tahoma;
-    color:white;
-    text-align:center;
-    padding-top:60px;
+background:#0b1622;
+font-family:tahoma;
+text-align:center;
+color:white;
+margin-top:80px;
 }
 
 .box{
-    background:#10283d;
-    width:90%;
-    max-width:400px;
-    margin:auto;
-    padding:25px;
-    border-radius:18px;
-    box-shadow:0 0 25px rgba(0,0,0,.4);
-}
-
-h2{
-    margin-bottom:20px;
+width:90%;
+max-width:350px;
+margin:auto;
+background:#122436;
+padding:20px;
+border-radius:15px;
 }
 
 input{
-    width:100%;
-    padding:14px;
-    margin:8px 0;
-    border-radius:10px;
-    border:none;
-    font-size:16px;
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:8px;
+border:none;
 }
 
 button{
-    width:100%;
-    padding:14px;
-    background:#35c46a;
-    border:none;
-    border-radius:12px;
-    color:white;
-    font-size:18px;
-    cursor:pointer;
-    margin-top:10px;
+width:100%;
+padding:12px;
+background:#2ecc71;
+border:none;
+color:white;
+border-radius:10px;
+font-size:18px;
 }
-
-button:active{
-    transform:scale(.98);
-    background:#2fa95b;
-}
-
-a{
-    color:#7dc6ff;
-    text-decoration:none;
-    display:block;
-    margin-top:15px;
-}
+a{color:#4fc3f7}
 </style>
-
-<!-- Firebase (المهم جدا) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-<!-- اعدادات مشروعك -->
-<script src="firebase.js"></script>
-
 </head>
+
 <body>
 
 <div class="box">
 <h2>إنشاء حساب</h2>
 
-<input id="username" type="text" placeholder="اسم المستخدم">
+<input id="username" placeholder="اسم المستخدم">
 <input id="email" type="email" placeholder="البريد الإلكتروني">
 <input id="password" type="password" placeholder="كلمة المرور">
 
-<button id="registerBtn">إنشاء الحساب</button>
-
+<button onclick="register()">إنشاء الحساب</button>
+<br><br>
 <a href="login.html">لديك حساب؟ تسجيل الدخول</a>
 </div>
 
+<script src="firebase.js"></script>
+
 <script>
+function register(){
 
-document.getElementById("registerBtn").onclick = function(){
+var username = document.getElementById("username").value.trim();
+var email = document.getElementById("email").value.trim();
+var password = document.getElementById("password").value.trim();
 
-    const username = document.getElementById("username").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
+if(username=="" || email=="" || password==""){
+alert("املأ جميع الحقول");
+return;
+}
 
-    if(username=="" || email=="" || password==""){
-        alert("املأ جميع الحقول");
-        return;
-    }
+firebase.auth().createUserWithEmailAndPassword(email,password)
+.then(function(userCredential){
 
-    // إنشاء حساب
-    firebase.auth().createUserWithEmailAndPassword(email,password)
-    .then(function(userCredential){
+var user = userCredential.user;
 
-        const user = userCredential.user;
+firebase.database().ref("users/"+user.uid).set({
+username: username,
+email: email,
+uid: user.uid
+});
 
-        // حفظ البيانات
-        firebase.database().ref("users/"+user.uid).set({
-            username: username,
-            email: email,
-            uid: user.uid,
-            createdAt: Date.now()
-        });
+localStorage.setItem("chatUID",user.uid);
+localStorage.setItem("chatUser",username);
 
-        alert("تم إنشاء الحساب بنجاح");
+window.location.href="app/index.html";
 
-        // التحويل للدردشة
-        window.location.href="chat.html";
-
-    })
-    .catch(function(error){
-        alert(error.message);
-    });
-
-};
-
+})
+.catch(function(error){
+alert(error.message);
+});
+}
 </script>
-    
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-<script src="app/firebase.js"></script>
 </body>
 </html>
