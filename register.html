@@ -9,8 +9,8 @@
 body{
 background:#0b1622;
 font-family:tahoma;
-text-align:center;
 color:white;
+text-align:center;
 margin-top:80px;
 }
 
@@ -18,29 +18,51 @@ margin-top:80px;
 width:90%;
 max-width:350px;
 margin:auto;
-background:#122436;
-padding:20px;
-border-radius:15px;
+background:#12283a;
+padding:25px;
+border-radius:18px;
+box-shadow:0 0 20px rgba(0,0,0,0.4);
 }
 
 input{
 width:100%;
-padding:12px;
-margin:8px 0;
-border-radius:8px;
+padding:14px;
+margin:10px 0;
+border-radius:10px;
 border:none;
+font-size:16px;
 }
 
 button{
 width:100%;
-padding:12px;
-background:#2ecc71;
+padding:14px;
+margin-top:10px;
 border:none;
+border-radius:12px;
+background:#35c46b;
 color:white;
-border-radius:10px;
 font-size:18px;
+cursor:pointer;
 }
-a{color:#4fc3f7}
+
+button:active{
+transform:scale(0.97);
+}
+
+a{
+color:#4fc3f7;
+text-decoration:none;
+}
+
+/* حل مشكلة الزر الذي لا يضغط */
+*::before,
+*::after{
+pointer-events:none;
+}
+
+button{
+pointer-events:auto;
+}
 </style>
 </head>
 
@@ -49,7 +71,7 @@ a{color:#4fc3f7}
 <div class="box">
 <h2>إنشاء حساب</h2>
 
-<input id="username" placeholder="اسم المستخدم">
+<input id="username" type="text" placeholder="اسم المستخدم">
 <input id="email" type="email" placeholder="البريد الإلكتروني">
 <input id="password" type="password" placeholder="كلمة المرور">
 
@@ -58,14 +80,30 @@ a{color:#4fc3f7}
 <a href="login.html">لديك حساب؟ تسجيل الدخول</a>
 </div>
 
-<script src="firebase.js"></script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
+var firebaseConfig = {
+apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79NC6G_xGLznBJc",
+authDomain: "tttrt-b8c5a.firebaseapp.com",
+databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId: "tttrt-b8c5a",
+storageBucket: "tttrt-b8c5a.firebasestorage.app",
+messagingSenderId: "975123752593",
+appId: "1:975123752593:web:e591e930af3a3e29568130"
+};
+
+firebase.initializeApp(firebaseConfig);
+
 function register(){
 
-var username = document.getElementById("username").value.trim();
-var email = document.getElementById("email").value.trim();
-var password = document.getElementById("password").value.trim();
+var username=document.getElementById("username").value.trim();
+var email=document.getElementById("email").value.trim();
+var password=document.getElementById("password").value.trim();
 
 if(username=="" || email=="" || password==""){
 alert("املأ جميع الحقول");
@@ -73,25 +111,30 @@ return;
 }
 
 firebase.auth().createUserWithEmailAndPassword(email,password)
+
 .then(function(userCredential){
 
-var user = userCredential.user;
+var user=userCredential.user;
 
 firebase.database().ref("users/"+user.uid).set({
-username: username,
-email: email,
-uid: user.uid
+username:username,
+email:email,
+uid:user.uid
 });
 
 localStorage.setItem("chatUID",user.uid);
 localStorage.setItem("chatUser",username);
 
+alert("تم إنشاء الحساب بنجاح");
+
 window.location.href="app/index.html";
 
 })
+
 .catch(function(error){
 alert(error.message);
 });
+
 }
 </script>
 
