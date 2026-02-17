@@ -1,142 +1,104 @@
-<!DOCTYPE html>
-<html lang="ar">
+<!DOCTYPE html><html lang="ar">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>إنشاء حساب</title>
-
-<style>
+<title>إنشاء حساب</title><style>
 body{
 background:#0b1622;
 font-family:tahoma;
 color:white;
 text-align:center;
-margin-top:80px;
+margin-top:80px
 }
-
 .box{
 width:90%;
-max-width:350px;
+max-width:400px;
 margin:auto;
-background:#12283a;
+background:#13283a;
 padding:25px;
-border-radius:18px;
-box-shadow:0 0 20px rgba(0,0,0,0.4);
+border-radius:12px
 }
-
 input{
 width:100%;
 padding:14px;
-margin:10px 0;
-border-radius:10px;
+margin:8px 0;
+border-radius:8px;
 border:none;
-font-size:16px;
+font-size:16px
 }
-
 button{
 width:100%;
 padding:14px;
-margin-top:10px;
-border:none;
-border-radius:12px;
-background:#35c46b;
+margin-top:12px;
+background:#28c76f;
 color:white;
-font-size:18px;
-cursor:pointer;
+border:none;
+border-radius:10px;
+font-size:18px
 }
-
-button:active{
-transform:scale(0.97);
-}
-
-a{
-color:#4fc3f7;
-text-decoration:none;
-}
-
-/* حل مشكلة الزر الذي لا يضغط */
-*::before,
-*::after{
-pointer-events:none;
-}
-
-button{
-pointer-events:auto;
-}
-</style>
-</head>
-
-<body>
-
-<div class="box">
-<h2>إنشاء حساب</h2>
-
-<input id="username" type="text" placeholder="اسم المستخدم">
+a{color:#4fc3f7;text-decoration:none}
+</style><!-- firebase --><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script><script src="app/firebase.js"></script></head><body><div class="box">
+<h2>إنشاء حساب</h2><input id="username" placeholder="اسم المستخدم (5 أحرف على الأقل)">
 <input id="email" type="email" placeholder="البريد الإلكتروني">
-<input id="password" type="password" placeholder="كلمة المرور">
-
-<button onclick="register()">إنشاء الحساب</button>
+<input id="password" type="password" placeholder="كلمة المرور"><button onclick="register()">إنشاء الحساب</button>
 <br><br>
 <a href="login.html">لديك حساب؟ تسجيل الدخول</a>
-</div>
 
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-<script>
-var firebaseConfig = {
-apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79NC6G_xGLznBJc",
-authDomain: "tttrt-b8c5a.firebaseapp.com",
-databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
-projectId: "tttrt-b8c5a",
-storageBucket: "tttrt-b8c5a.firebasestorage.app",
-messagingSenderId: "975123752593",
-appId: "1:975123752593:web:e591e930af3a3e29568130"
-};
-
-firebase.initializeApp(firebaseConfig);
+</div><script>
 
 function register(){
 
-var username=document.getElementById("username").value.trim();
-var email=document.getElementById("email").value.trim();
-var password=document.getElementById("password").value.trim();
+var username = document.getElementById("username").value.trim().toLowerCase();
+var email = document.getElementById("email").value.trim();
+var password = document.getElementById("password").value.trim();
 
-if(username=="" || email=="" || password==""){
-alert("املأ جميع الحقول");
+if(username.length < 5){
+alert("اسم المستخدم يجب ان يكون 5 احرف على الاقل");
+return;
+}
+
+if(username.includes("@")){
+alert("لا تكتب @ التطبيق يضيفها تلقائيا");
+return;
+}
+
+var usernameRef = firebase.database().ref("usernames/"+username);
+
+usernameRef.once("value").then(function(snapshot){
+
+if(snapshot.exists()){
+alert("اسم المستخدم مستخدم مسبقا");
 return;
 }
 
 firebase.auth().createUserWithEmailAndPassword(email,password)
-
 .then(function(userCredential){
 
-var user=userCredential.user;
+var user = userCredential.user;
 
 firebase.database().ref("users/"+user.uid).set({
-username:username,
-email:email,
-uid:user.uid
+username: "@"+username,
+email: email,
+uid: user.uid
 });
 
+firebase.database().ref("usernames/"+username).set(user.uid);
+
 localStorage.setItem("chatUID",user.uid);
-localStorage.setItem("chatUser",username);
+localStorage.setItem("chatUser","@"+username);
 
 alert("تم إنشاء الحساب بنجاح");
 
 window.location.href="app/index.html";
 
 })
-
 .catch(function(error){
 alert(error.message);
 });
 
-}
-</script>
+});
 
-</body>
+}
+
+</script></body>
 </html>
