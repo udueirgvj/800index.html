@@ -4,49 +4,87 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>تسجيل الدخول</title>
+
 <style>
-body{background:#0b1622;font-family:tahoma;color:white;text-align:center;margin-top:80px}
-input{width:80%;padding:12px;margin:8px;border-radius:8px;border:none}
-button{padding:12px 20px;background:#3498db;color:white;border:none;border-radius:8px}
+body{
+background:#0b1622;
+font-family:tahoma;
+text-align:center;
+color:white;
+margin-top:80px;
+}
+
+.box{
+width:90%;
+max-width:350px;
+margin:auto;
+background:#122436;
+padding:20px;
+border-radius:15px;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:8px;
+border:none;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#3498db;
+border:none;
+color:white;
+border-radius:10px;
+font-size:18px;
+}
+a{color:#4fc3f7}
 </style>
 </head>
+
 <body>
 
+<div class="box">
 <h2>تسجيل الدخول</h2>
 
-<input id="username" placeholder="@username">
-<input id="password" type="password" placeholder="password">
+<input id="email" type="email" placeholder="البريد الإلكتروني">
+<input id="password" type="password" placeholder="كلمة المرور">
 
-<br>
 <button onclick="login()">دخول</button>
 <br><br>
-<a href="register.html" style="color:#4fc3f7">إنشاء حساب</a>
+<a href="register.html">إنشاء حساب</a>
+</div>
 
-<script type="module">
-import { auth, db } from "./app/firebase.js";
-import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+<script src="firebase.js"></script>
 
-window.login = async function(){
+<script>
+function login(){
 
-let username=document.getElementById("username").value.trim();
-let password=document.getElementById("password").value.trim();
+var email=document.getElementById("email").value.trim();
+var password=document.getElementById("password").value.trim();
 
-let clean=username.replace("@","");
+firebase.auth().signInWithEmailAndPassword(email,password)
+.then(function(userCredential){
 
-const snap=await get(child(ref(db),"usernames/"+clean));
-if(!snap.exists()){alert("المستخدم غير موجود");return;}
+var user=userCredential.user;
 
-const uid=snap.val();
-const userData=await get(child(ref(db),"users/"+uid));
-const email=userData.val().email;
+firebase.database().ref("users/"+user.uid).once("value",function(snap){
 
-await signInWithEmailAndPassword(auth,email,password);
+var username=snap.val().username;
 
-localStorage.setItem("chatUID",uid);
+localStorage.setItem("chatUID",user.uid);
 localStorage.setItem("chatUser",username);
 
-window.location="index.html";
+window.location.href="app/index.html";
+
+});
+
+})
+.catch(function(error){
+alert(error.message);
+});
 }
 </script>
 
