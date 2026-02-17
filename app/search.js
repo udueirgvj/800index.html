@@ -1,53 +1,46 @@
-import { db, auth } from "./firebase.js";
-import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { db } from "./firebase.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const searchInput = document.getElementById("searchInput");
-const resultsBox = document.getElementById("results");
+const input = document.getElementById("searchInput");
+const results = document.getElementById("results");
 
-searchInput.addEventListener("input", async () => {
+// اسم المستودع (GitHub repo name)
+const repo = window.location.pathname.split("/")[1];
 
-    let text = searchInput.value.trim().toLowerCase();
-    resultsBox.innerHTML = "";
+input.addEventListener("input", async () => {
 
-    if(text.length < 1) return;
+    let value = input.value.trim().toLowerCase();
+    results.innerHTML = "";
 
-    try{
+    if(value.length < 1) return;
 
-        const snapshot = await get(ref(db,"users"));
+    const snapshot = await get(ref(db,"users"));
 
-        if(!snapshot.exists()) return;
+    if(!snapshot.exists()) return;
 
-        snapshot.forEach((userSnap)=>{
+    snapshot.forEach(child => {
 
-            const user = userSnap.val();
+        const user = child.val();
+        if(!user.username) return;
 
-            if(!user.username) return;
+        if(user.username.toLowerCase().includes(value)){
 
-            let username = user.username.toLowerCase();
+            const div = document.createElement("div");
+            div.className = "userResult";
+            div.innerText = "@" + user.username;
 
-            if(username.includes(text)){
+            div.onclick = () => {
 
-                const div = document.createElement("div");
-                div.className = "userResult";
-                div.innerText = "@" + user.username;
+                localStorage.setItem("chatWith", user.uid);
+                localStorage.setItem("chatWithName", user.username);
 
-                div.onclick = ()=>{
+                // ⭐ التحويل الصحيح حسب اسم المشروع
+                window.location.href = "/" + repo + "/app/index.html";
+            };
 
-                    // حفظ الشخص الذي سيتم مراسلته
-                    localStorage.setItem("chatWith", user.uid);
-                    localStorage.setItem("chatWithName", user.username);
+            results.appendChild(div);
+        }
 
-                    // ⭐ هذا هو الإصلاح الحقيقي لمشكلة 404
-                    window.location.href = "../app/index.html";
-                };
-
-                resultsBox.appendChild(div);
-            }
-
-        });
-
-    }catch(e){
-        console.log(e);
-    }
+    });
 
 });
