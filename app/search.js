@@ -1,54 +1,53 @@
-import { db } from "./firebase.js";
-import { ref, get, child } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+import { db, auth } from "./firebase.js";
+import { ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const searchBtn = document.getElementById("openSearch");
-const searchBox = document.getElementById("searchBox");
 const searchInput = document.getElementById("searchInput");
-const results = document.getElementById("results");
+const resultsBox = document.getElementById("results");
 
-if(searchBtn){
-searchBtn.onclick = () => {
-    searchBox.style.display = "block";
-};
-}
+searchInput.addEventListener("input", async () => {
 
-window.searchUser = async function(){
+    let text = searchInput.value.trim().toLowerCase();
+    resultsBox.innerHTML = "";
 
-    let value = searchInput.value.trim().toLowerCase();
-    results.innerHTML = "";
+    if(text.length < 1) return;
 
-    if(value === "") return;
+    try{
 
-    const snapshot = await get(ref(db,"users"));
+        const snapshot = await get(ref(db,"users"));
 
-    if(!snapshot.exists()){
-        results.innerHTML = "<p>لا يوجد مستخدمين</p>";
-        return;
+        if(!snapshot.exists()) return;
+
+        snapshot.forEach((userSnap)=>{
+
+            const user = userSnap.val();
+
+            if(!user.username) return;
+
+            let username = user.username.toLowerCase();
+
+            if(username.includes(text)){
+
+                const div = document.createElement("div");
+                div.className = "userResult";
+                div.innerText = "@" + user.username;
+
+                div.onclick = ()=>{
+
+                    // حفظ الشخص الذي سيتم مراسلته
+                    localStorage.setItem("chatWith", user.uid);
+                    localStorage.setItem("chatWithName", user.username);
+
+                    // ⭐ هذا هو الإصلاح الحقيقي لمشكلة 404
+                    window.location.href = "../app/index.html";
+                };
+
+                resultsBox.appendChild(div);
+            }
+
+        });
+
+    }catch(e){
+        console.log(e);
     }
 
-    snapshot.forEach(childSnap => {
-
-        let user = childSnap.val();
-        let username = user.username.toLowerCase();
-
-        if(username.includes(value)){
-
-            const div = document.createElement("div");
-            div.className = "user-result";
-            div.innerHTML = "@" + user.username;
-
-            div.onclick = () => {
-
-                // حفظ الشخص الذي سيتم فتح محادثته
-                localStorage.setItem("chatWith", user.uid);
-                localStorage.setItem("chatWithName", user.username);
-
-                // التحويل الصحيح (هذا هو الإصلاح الحقيقي)
-                window.location.href = "app/index.html";
-            };
-
-            results.appendChild(div);
-        }
-
-    });
-};
+});
