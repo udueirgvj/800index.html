@@ -3,55 +3,66 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clipn</title>
+<title>Clipn - تسجيل الدخول</title>
 
 <style>
 body{
 margin:0;
 font-family:tahoma;
-background:#0b2a35;
+background:#08252e;
 color:white;
 display:flex;
-justify-content:center;
 align-items:center;
+justify-content:center;
 height:100vh;
 }
 
 .box{
-width:90%;
+width:95%;
 max-width:380px;
-background:#113846;
+background:#0e3a47;
 padding:25px;
-border-radius:14px;
-text-align:center;
+border-radius:18px;
+box-shadow:0 0 25px rgba(0,0,0,.4);
 }
 
-h2{margin-bottom:20px;}
+h2{
+text-align:center;
+margin-bottom:20px;
+}
 
 input{
 width:100%;
-padding:12px;
+padding:14px;
 margin:8px 0;
 border:none;
-border-radius:8px;
+border-radius:10px;
+background:#124757;
+color:white;
 font-size:15px;
+}
+
+input::placeholder{
+color:#bcdde6;
 }
 
 button{
 width:100%;
-padding:13px;
+padding:14px;
+margin-top:12px;
 border:none;
-border-radius:10px;
+border-radius:12px;
 background:#2ecc71;
 color:white;
 font-size:16px;
-margin-top:10px;
+font-weight:bold;
 cursor:pointer;
 }
 
 .switch{
+text-align:center;
 margin-top:15px;
-color:#6ec1ff;
+color:#9ad0df;
 cursor:pointer;
 }
 </style>
@@ -61,17 +72,23 @@ cursor:pointer;
 
 <div class="box">
 
-<h2 id="title">تسجيل الدخول</h2>
+<h2 id="title">إنشاء حساب</h2>
 
-<input id="username" placeholder="اسم المستخدم (5 احرف على الأقل)" style="display:none;">
-<input id="email" placeholder="البريد الالكتروني">
+<!-- الاسم الشخصي -->
+<input id="name" placeholder="الاسم الشخصي">
+
+<!-- اسم المستخدم -->
+<input id="username" placeholder="اسم المستخدم (5 احرف على الاقل)">
+
+<!-- البريد -->
+<input id="email" type="email" placeholder="البريد الإلكتروني">
+
+<!-- كلمة المرور -->
 <input id="password" type="password" placeholder="كلمة المرور">
 
-<button onclick="submitForm()" id="mainBtn">دخول</button>
+<button onclick="registerUser()">إنشاء الحساب</button>
 
-<div class="switch" onclick="toggleMode()" id="switchText">
-إنشاء حساب جديد
-</div>
+<div class="switch" onclick="loginUser()">لديك حساب؟ تسجيل الدخول</div>
 
 </div>
 
@@ -79,7 +96,8 @@ cursor:pointer;
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth,
+import {
+getAuth,
 createUserWithEmailAndPassword,
 signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -88,109 +106,99 @@ import {
 getDatabase,
 ref,
 set,
-get,
-child
+get
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-/* بيانات مشروعك */
 const firebaseConfig = {
-  apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79NC6G_xGLznBJc",
-  authDomain: "tttrt-b8c5a.firebaseapp.com",
-  databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "tttrt-b8c5a",
-  storageBucket: "tttrt-b8c5a.firebasestorage.app",
-  messagingSenderId: "975123752593",
-  appId: "1:975123752593:web:e591e930af3a3e29568130"
+apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79NC6G_xGLznBJc",
+authDomain: "tttrt-b8c5a.firebaseapp.com",
+databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId: "tttrt-b8c5a",
+storageBucket: "tttrt-b8c5a.firebasestorage.app",
+messagingSenderId: "975123752593",
+appId: "1:975123752593:web:e591e930af3a3e29568130"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-let isRegister=false;
 
-/* تغيير الوضع */
-window.toggleMode=function(){
+// إنشاء حساب
+window.registerUser = async function(){
 
-isRegister=!isRegister;
+const name = document.getElementById("name").value.trim();
+const username = document.getElementById("username").value.toLowerCase().trim();
+const email = document.getElementById("email").value.trim();
+const password = document.getElementById("password").value.trim();
 
-document.getElementById("title").innerText =
-isRegister ? "إنشاء حساب" : "تسجيل الدخول";
-
-document.getElementById("mainBtn").innerText =
-isRegister ? "إنشاء الحساب" : "دخول";
-
-document.getElementById("switchText").innerText =
-isRegister ? "لديك حساب؟ تسجيل الدخول" : "إنشاء حساب جديد";
-
-document.getElementById("username").style.display =
-isRegister ? "block" : "none";
-}
-
-/* تسجيل / دخول */
-window.submitForm=async function(){
-
-const email=document.getElementById("email").value.trim();
-const password=document.getElementById("password").value.trim();
-const username=document.getElementById("username").value.trim().toLowerCase();
-
-if(!email || !password){
+if(!name || !username || !email || !password){
 alert("املأ جميع الحقول");
 return;
 }
 
-/* إنشاء حساب */
-if(isRegister){
-
 if(username.length < 5){
-alert("اسم المستخدم يجب ان يكون 5 احرف على الأقل");
+alert("اسم المستخدم يجب أن يكون 5 أحرف على الأقل");
 return;
 }
 
-/* فحص التكرار */
-const nameCheck = await get(child(ref(db),"usernames/"+username));
-if(nameCheck.exists()){
-alert("اسم المستخدم مستخدم مسبقاً");
+// التحقق من تكرار اسم المستخدم
+const check = await get(ref(db,"usernames/"+username));
+if(check.exists()){
+alert("اسم المستخدم مستخدم بالفعل");
 return;
 }
 
-createUserWithEmailAndPassword(auth,email,password)
-.then(async cred=>{
+try{
 
-const uid=cred.user.uid;
+// إنشاء الحساب
+const userCred = await createUserWithEmailAndPassword(auth,email,password);
+const uid = userCred.user.uid;
 
-/* حفظ بيانات المستخدم */
+// حفظ بيانات المستخدم
 await set(ref(db,"users/"+uid),{
+name:name,
 username:username,
-email:email
+email:email,
+photo:"default",
+created:Date.now()
 });
 
-/* حجز الاسم */
+// حجز اسم المستخدم
 await set(ref(db,"usernames/"+username),uid);
 
-/* التحويل للرئيسية */
+alert("تم إنشاء الحساب بنجاح");
+
+// تحويل للصفحة الرئيسية
 window.location.href="home.html";
 
-})
-.catch(e=>alert(e.message));
-
+}catch(err){
+alert(err.message);
+}
 }
 
-/* تسجيل دخول */
-else{
 
-signInWithEmailAndPassword(auth,email,password)
-.then(()=>{
+// تسجيل الدخول
+window.loginUser = async function(){
+
+const email = document.getElementById("email").value.trim();
+const password = document.getElementById("password").value.trim();
+
+if(!email || !password){
+alert("ادخل البريد وكلمة المرور");
+return;
+}
+
+try{
+await signInWithEmailAndPassword(auth,email,password);
 window.location.href="home.html";
-})
-.catch(()=>{
-alert("بيانات تسجيل الدخول خاطئة");
-});
-
+}catch(e){
+alert("بيانات الدخول غير صحيحة");
 }
 
 }
 
 </script>
+
 </body>
 </html>
