@@ -2,41 +2,130 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clipn</title>
 
+<script type="module" src="abb.js"></script>
+
+<style>
+body{
+background:#0b1f2a;
+color:white;
+font-family:sans-serif;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.box{
+background:#102b3a;
+padding:30px;
+border-radius:15px;
+width:300px;
+text-align:center;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:8px 0;
+border:none;
+border-radius:8px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+background:#2ecc71;
+color:white;
+font-size:16px;
+}
+
+.switch{
+margin-top:10px;
+color:#4fc3f7;
+cursor:pointer;
+}
+</style>
+
+</head>
+<body>
+
+<div class="box">
+
+<h2 id="title">تسجيل الدخول</h2>
+
+<input id="email" placeholder="البريد الالكتروني">
+<input id="password" type="password" placeholder="كلمة المرور">
+
+<button onclick="submitForm()" id="mainBtn">دخول</button>
+
+<div class="switch" onclick="toggleMode()" id="switchText">
+إنشاء حساب جديد
+</div>
+
+</div>
+
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79NC6G_xGLznBJc",
   authDomain: "tttrt-b8c5a.firebaseapp.com",
-  databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "tttrt-b8c5a",
-  storageBucket: "tttrt-b8c5a.appspot.com",
-  messagingSenderId: "975123752593",
-  appId: "1:975123752593:web:e591e930af3a3e29568130"
+  projectId: "tttrt-b8c5a"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-onAuthStateChanged(auth, (user) => {
+let isRegister=false;
 
-  if(user){
-    // المستخدم مسجل → ادخله التطبيق
-    window.location.href = "home.html";
-  }else{
-    // غير مسجل → صفحة تسجيل الدخول
-    window.location.href = "login.html";
-  }
+window.toggleMode=function(){
+isRegister=!isRegister;
 
-});
+document.getElementById("title").innerText =
+isRegister ? "إنشاء حساب" : "تسجيل الدخول";
+
+document.getElementById("mainBtn").innerText =
+isRegister ? "إنشاء الحساب" : "دخول";
+
+document.getElementById("switchText").innerText =
+isRegister ? "لديك حساب؟ تسجيل الدخول" : "إنشاء حساب جديد";
+}
+
+window.submitForm=function(){
+
+const email=document.getElementById("email").value;
+const password=document.getElementById("password").value;
+
+if(!email || !password){
+alert("املأ الحقول");
+return;
+}
+
+if(isRegister){
+createUserWithEmailAndPassword(auth,email,password)
+.then(()=>{
+window.location.href="home.html";
+})
+.catch(e=>alert(e.message));
+}
+else{
+signInWithEmailAndPassword(auth,email,password)
+.then(()=>{
+window.location.href="home.html";
+})
+.catch(e=>alert("بيانات خاطئة"));
+}
+
+}
+
 </script>
 
-</head>
-<body style="background:#0b1f2a;color:white;text-align:center;margin-top:100px;">
-جاري التحميل...
 </body>
 </html>
