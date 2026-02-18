@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - تطبيق تواصل</title>
+    <title>تسجيل دخول حقيقي مع Firebase</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
         }
         body {
             background: linear-gradient(145deg, #e8f0fe, #d9e4f5);
@@ -234,9 +234,9 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (الإصدارات الحديثة) -->
     <script type="module">
-        // استيراد المكتبات المطلوبة من Firebase
+        // استيراد المكتبات المطلوبة
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { 
             getAuth, 
@@ -254,7 +254,7 @@
             get 
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // إعدادات Firebase (قم بتعديلها حسب مشروعك)
+        // 🔥 استبدل هذا الكائن بمفاتيح مشروعك من Firebase Console 🔥
         const firebaseConfig = {
             apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79NC6G_xGLznBJc",
             authDomain: "tttrt-b8c5a.firebaseapp.com",
@@ -278,7 +278,7 @@
             msgDiv.className = isSuccess ? 'message success' : 'message error';
         }
 
-        // التحقق من أن اسم المستخدم غير مستخدم مسبقاً
+        // التحقق من أن اسم المستخدم غير مستخدم
         async function isUsernameUnique(username) {
             const usersRef = ref(database, 'users');
             const usernameQuery = query(usersRef, orderByChild('username'), equalTo(username));
@@ -286,7 +286,7 @@
             return !snapshot.exists();
         }
 
-        // ---------- التسجيل (Sign Up) ----------
+        // ---------- إنشاء حساب جديد ----------
         document.getElementById('signupForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -295,7 +295,7 @@
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
 
-            // التحقق الأساسي
+            // التحقق من المدخلات
             if (!fullName || !username || !email || !password) {
                 showMessage('signupMessage', 'جميع الحقول مطلوبة', false);
                 return;
@@ -306,18 +306,18 @@
             }
 
             try {
-                // 1. التحقق من اسم المستخدم الفريد
+                // التحقق من أن اسم المستخدم غير موجود مسبقاً
                 const unique = await isUsernameUnique(username);
                 if (!unique) {
                     showMessage('signupMessage', 'اسم المستخدم موجود بالفعل، اختر اسماً آخر', false);
                     return;
                 }
 
-                // 2. إنشاء المستخدم في Firebase Authentication
+                // إنشاء المستخدم في Firebase Authentication
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // 3. حفظ البيانات الإضافية في Realtime Database
+                // حفظ البيانات الإضافية في Realtime Database
                 await set(ref(database, 'users/' + user.uid), {
                     fullName: fullName,
                     username: username,
@@ -327,7 +327,7 @@
 
                 showMessage('signupMessage', 'تم إنشاء الحساب بنجاح! جارٍ تحويلك...', true);
                 
-                // التوجيه إلى الصفحة الرئيسية بعد ثانية
+                // التوجيه إلى الصفحة الرئيسية بعد ثانية ونصف
                 setTimeout(() => {
                     window.location.href = 'home.html';
                 }, 1500);
@@ -341,7 +341,7 @@
             }
         });
 
-        // ---------- تسجيل الدخول (Login) ----------
+        // ---------- تسجيل الدخول ----------
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
