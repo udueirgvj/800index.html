@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clipn - تسجيل الدخول</title>
+
+<link rel="stylesheet" href="style.css">
+
+<!-- Firebase -->
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+/* بيانات مشروعك */
+const firebaseConfig = {
+  apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79NC6G_xGLznBJc",
+  authDomain: "tttrt-b8c5a.firebaseapp.com",
+  databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "tttrt-b8c5a",
+  storageBucket: "tttrt-b8c5a.firebasestorage.app",
+  messagingSenderId: "975123752593",
+  appId: "1:975123752593:web:e591e930af3a3e29568130",
+  measurementId: "G-VJVE851FEW"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+/* إذا كان المستخدم مسجل دخول بالفعل */
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window.location.href = "contact.html";
+  }
+});
+
+/* تسجيل الدخول */
+window.loginUser = function(){
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if(email === "" || password === ""){
+    alert("املأ جميع الحقول");
+    return;
+  }
+
+  signInWithEmailAndPassword(auth, email, password)
+  .then((userCredential) => {
+      alert("تم تسجيل الدخول");
+      window.location.href = "contact.html";
+  })
+  .catch((error) => {
+      alert("خطأ: " + error.message);
+  });
+}
+
+</script>
+
+<style>
+body{
+    margin:0;
+    font-family:Tahoma;
+    background:#062b36;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.box{
+    width:90%;
+    max-width:400px;
+    background:#0d3a46;
+    padding:25px;
+    border-radius:15px;
+    text-align:center;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    margin:10px 0;
+    border-radius:8px;
+    border:none;
+    font-size:16px;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    background:#2ecc71;
+    border:none;
+    border-radius:8px;
+    color:white;
+    font-size:18px;
+    margin-top:10px;
+}
+
+a{
+    color:#7fd1ff;
+    text-decoration:none;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+    <h1>Clipn</h1>
+
+    <input type="email" id="email" placeholder="البريد الإلكتروني">
+    <input type="password" id="password" placeholder="كلمة المرور">
+
+    <button onclick="loginUser()">تسجيل الدخول</button>
+
+    <p style="margin-top:15px;">
+        ليس لديك حساب؟
+        <a href="register.html">إنشاء حساب</a>
+    </p>
+</div>
+
+</body>
+</html>
