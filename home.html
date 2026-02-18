@@ -5,57 +5,110 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clipn</title>
 
-<script type="module" src="abb.js"></script>
-
 <style>
 
 body{
 margin:0;
-font-family:tahoma;
-background:#08252e;
-color:white;
+font-family:Tahoma;
+background:#f3f3f3;
 }
 
+/* الشريط العلوي */
 .topbar{
-position:fixed;
-top:0;
-right:0;
-left:0;
 height:60px;
-background:#0e3a47;
+background:white;
 display:flex;
 align-items:center;
 justify-content:space-between;
 padding:0 15px;
+box-shadow:0 1px 5px rgba(0,0,0,0.15);
+position:fixed;
+top:0;
+right:0;
+left:0;
+z-index:10;
 }
 
 .appname{
-font-size:20px;
+font-size:22px;
 font-weight:bold;
+color:#2AABEE;
 }
 
-.chat-list{
-margin-top:70px;
-padding:10px;
-}
-
-.user{
-background:#124757;
-padding:15px;
-border-radius:12px;
-margin-bottom:10px;
+.search-btn{
+font-size:22px;
 cursor:pointer;
 }
 
-.chat-window{
+/* البحث */
+.search-box{
+display:none;
+background:white;
+padding:10px;
 position:fixed;
 top:60px;
-bottom:0;
 left:0;
 right:0;
-background:#08252e;
+box-shadow:0 2px 6px rgba(0,0,0,.15);
+z-index:9;
+}
+
+.search-box input{
+width:100%;
+padding:12px;
+border-radius:12px;
+border:1px solid #ccc;
+font-size:16px;
+}
+
+/* قائمة المحادثات */
+.chat-list{
+margin-top:110px;
+padding:10px;
+}
+
+.chat{
+background:white;
+padding:14px;
+border-radius:14px;
+margin-bottom:10px;
+display:flex;
+align-items:center;
+gap:10px;
+cursor:pointer;
+box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+
+.avatar{
+width:45px;
+height:45px;
+border-radius:50%;
+background:#2AABEE;
+}
+
+.chat-name{
+font-weight:bold;
+}
+
+/* نافذة الدردشة */
+.chat-window{
+position:fixed;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:#e5ddd5;
 display:none;
 flex-direction:column;
+}
+
+.chat-header{
+height:60px;
+background:white;
+display:flex;
+align-items:center;
+padding:0 15px;
+box-shadow:0 1px 5px rgba(0,0,0,0.15);
 }
 
 .messages{
@@ -65,43 +118,54 @@ padding:15px;
 }
 
 .msg{
-background:#155a6e;
-padding:10px;
-margin:6px 0;
-border-radius:10px;
+background:white;
+padding:10px 14px;
+border-radius:14px;
+margin-bottom:8px;
 width:fit-content;
 max-width:70%;
 }
 
+/* ارسال */
 .send-box{
 display:flex;
 padding:10px;
-background:#0c2f3a;
+background:white;
+gap:8px;
 }
 
 .send-box input{
 flex:1;
 padding:12px;
-border-radius:10px;
-border:none;
+border-radius:20px;
+border:1px solid #ccc;
 }
 
-button{
-padding:12px;
-margin-right:5px;
-border:none;
-border-radius:10px;
-background:#2ecc71;
+.send-box button{
+background:#2AABEE;
 color:white;
+border:none;
+padding:10px 18px;
+border-radius:20px;
 }
 
-.logout{
+/* الشريط السفلي */
+.bottombar{
 position:fixed;
-bottom:20px;
-left:20px;
-background:red;
-padding:12px 18px;
-border-radius:12px;
+bottom:0;
+left:0;
+right:0;
+height:60px;
+background:white;
+display:flex;
+justify-content:space-around;
+align-items:center;
+box-shadow:0 -2px 6px rgba(0,0,0,0.15);
+}
+
+.tab{
+text-align:center;
+font-size:14px;
 cursor:pointer;
 }
 
@@ -110,19 +174,33 @@ cursor:pointer;
 
 <body>
 
+<!-- Topbar -->
 <div class="topbar">
 <div class="appname">Clipn</div>
+<div class="search-btn" onclick="toggleSearch()">🔍</div>
 </div>
 
+<!-- Search -->
+<div class="search-box" id="searchBox">
+<input id="searchInput" placeholder="ابحث عن اسم المستخدم">
+</div>
+
+<!-- Chat list -->
 <div class="chat-list" id="chatList">
 
-<div class="user" onclick="openChat('الدردشة العامة')">
-الدردشة العامة
+<div class="chat" onclick="openChat('الدردشة العامة')">
+<div class="avatar"></div>
+<div class="chat-name">الدردشة العامة</div>
 </div>
 
 </div>
 
+<!-- Chat window -->
 <div class="chat-window" id="chatWindow">
+
+<div class="chat-header">
+<b id="chatTitle">محادثة</b>
+</div>
 
 <div class="messages" id="messages"></div>
 
@@ -133,18 +211,27 @@ cursor:pointer;
 
 </div>
 
-<div class="logout" onclick="logoutUser()">تسجيل خروج</div>
+<!-- Bottom bar -->
+<div class="bottombar">
+<div class="tab">💬<br>المحادثات</div>
+<div class="tab">👤<br>جهات الاتصال</div>
+<div class="tab">⚙<br>الإعدادات</div>
+<div class="tab">🧑<br>الملف الشخصي</div>
+</div>
 
 <script>
 
-let opened=false;
+function toggleSearch(){
+let s=document.getElementById("searchBox");
+s.style.display = s.style.display=="block" ? "none":"block";
+}
 
 function openChat(name){
 document.getElementById("chatWindow").style.display="flex";
+document.getElementById("chatTitle").innerText=name;
 }
 
 function sendMsg(){
-
 let txt=document.getElementById("msgInput").value;
 if(!txt) return;
 
