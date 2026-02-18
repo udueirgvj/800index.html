@@ -2,15 +2,15 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clipn</title>
-
-<script type="module" src="abb.js"></script>
 
 <style>
 body{
-background:#0b1f2a;
+margin:0;
+font-family:tahoma;
+background:#0b2a35;
 color:white;
-font-family:sans-serif;
 display:flex;
 justify-content:center;
 align-items:center;
@@ -18,12 +18,15 @@ height:100vh;
 }
 
 .box{
-background:#102b3a;
-padding:30px;
-border-radius:15px;
-width:300px;
+width:90%;
+max-width:380px;
+background:#113846;
+padding:25px;
+border-radius:14px;
 text-align:center;
 }
+
+h2{margin-bottom:20px;}
 
 input{
 width:100%;
@@ -31,33 +34,36 @@ padding:12px;
 margin:8px 0;
 border:none;
 border-radius:8px;
+font-size:15px;
 }
 
 button{
 width:100%;
-padding:12px;
-margin-top:10px;
+padding:13px;
 border:none;
-border-radius:8px;
+border-radius:10px;
 background:#2ecc71;
 color:white;
 font-size:16px;
+margin-top:10px;
+cursor:pointer;
 }
 
 .switch{
-margin-top:10px;
-color:#4fc3f7;
+margin-top:15px;
+color:#6ec1ff;
 cursor:pointer;
 }
 </style>
-
 </head>
+
 <body>
 
 <div class="box">
 
 <h2 id="title">تسجيل الدخول</h2>
 
+<input id="username" placeholder="اسم المستخدم (5 احرف على الأقل)" style="display:none;">
 <input id="email" placeholder="البريد الالكتروني">
 <input id="password" type="password" placeholder="كلمة المرور">
 
@@ -69,23 +75,43 @@ cursor:pointer;
 
 </div>
 
+<!-- Firebase -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth,
+createUserWithEmailAndPassword,
+signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+import {
+getDatabase,
+ref,
+set,
+get,
+child
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* بيانات مشروعك */
 const firebaseConfig = {
   apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79NC6G_xGLznBJc",
   authDomain: "tttrt-b8c5a.firebaseapp.com",
-  projectId: "tttrt-b8c5a"
+  databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "tttrt-b8c5a",
+  storageBucket: "tttrt-b8c5a.firebasestorage.app",
+  messagingSenderId: "975123752593",
+  appId: "1:975123752593:web:e591e930af3a3e29568130"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getDatabase(app);
 
 let isRegister=false;
 
+/* تغيير الوضع */
 window.toggleMode=function(){
+
 isRegister=!isRegister;
 
 document.getElementById("title").innerText =
@@ -96,36 +122,75 @@ isRegister ? "إنشاء الحساب" : "دخول";
 
 document.getElementById("switchText").innerText =
 isRegister ? "لديك حساب؟ تسجيل الدخول" : "إنشاء حساب جديد";
+
+document.getElementById("username").style.display =
+isRegister ? "block" : "none";
 }
 
-window.submitForm=function(){
+/* تسجيل / دخول */
+window.submitForm=async function(){
 
-const email=document.getElementById("email").value;
-const password=document.getElementById("password").value;
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value.trim();
+const username=document.getElementById("username").value.trim().toLowerCase();
 
 if(!email || !password){
-alert("املأ الحقول");
+alert("املأ جميع الحقول");
 return;
 }
 
+/* إنشاء حساب */
 if(isRegister){
+
+if(username.length < 5){
+alert("اسم المستخدم يجب ان يكون 5 احرف على الأقل");
+return;
+}
+
+/* فحص التكرار */
+const nameCheck = await get(child(ref(db),"usernames/"+username));
+if(nameCheck.exists()){
+alert("اسم المستخدم مستخدم مسبقاً");
+return;
+}
+
 createUserWithEmailAndPassword(auth,email,password)
-.then(()=>{
+.then(async cred=>{
+
+const uid=cred.user.uid;
+
+/* حفظ بيانات المستخدم */
+await set(ref(db,"users/"+uid),{
+username:username,
+email:email
+});
+
+/* حجز الاسم */
+await set(ref(db,"usernames/"+username),uid);
+
+/* التحويل للرئيسية */
 window.location.href="home.html";
+
 })
 .catch(e=>alert(e.message));
+
 }
+
+/* تسجيل دخول */
 else{
+
 signInWithEmailAndPassword(auth,email,password)
 .then(()=>{
 window.location.href="home.html";
 })
-.catch(e=>alert("بيانات خاطئة"));
+.catch(()=>{
+alert("بيانات تسجيل الدخول خاطئة");
+});
+
 }
 
 }
 
 </script>
-
 </body>
 </html>
