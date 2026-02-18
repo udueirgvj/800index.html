@@ -1,25 +1,47 @@
-// مراقبة حالة تسجيل الدخول
-firebase.auth().onAuthStateChanged(function(user) {
+// استيراد فايربيس
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  // اذا المستخدم مسجل دخول
-  if (user) {
+// بيانات مشروعك
+const firebaseConfig = {
+  apiKey: "AIzaSyDRCtfuYrEdnuKUsWu_79NC6G_xGLznBJc",
+  authDomain: "tttrt-b8c5a.firebaseapp.com",
+  databaseURL: "https://tttrt-b8c5a-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "tttrt-b8c5a",
+  storageBucket: "tttrt-b8c5a.firebasestorage.app",
+  messagingSenderId: "975123752593",
+  appId: "1:975123752593:web:e591e930af3a3e29568130",
+  measurementId: "G-VJVE851FEW"
+};
 
-    // نحن الآن في صفحة التسجيل
-    if (window.location.pathname.includes("signup.html")) {
-      window.location.href = "index.html";
-    }
+// تشغيل فايربيس
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-    // نحن في صفحة تسجيل الدخول
-    if (window.location.pathname.includes("login.html")) {
-      window.location.href = "index.html";
-    }
+// الحارس الحقيقي
+onAuthStateChanged(auth, (user) => {
 
-  } else {
-
-    // اذا لم يكن مسجل دخول وتم فتح الصفحة الرئيسية
-    if (window.location.pathname.includes("index.html")) {
+  // إذا لم يكن مسجل دخول → اذهب لتسجيل الدخول
+  if (!user) {
+    if (!window.location.pathname.includes("login.html") &&
+        !window.location.pathname.includes("register.html")) {
       window.location.href = "login.html";
     }
-
   }
+
+  // إذا كان مسجل دخول وفتح صفحة تسجيل الدخول → خذه للرئيسية
+  else {
+    if (window.location.pathname.includes("login.html") ||
+        window.location.pathname.includes("register.html")) {
+      window.location.href = "home.html";
+    }
+  }
+
 });
+
+// زر تسجيل الخروج
+window.logoutUser = function(){
+  signOut(auth).then(()=>{
+    window.location.href = "login.html";
+  });
+}
