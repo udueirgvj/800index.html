@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Chat</title>
+<title>ذكاء اصطناعي</title>
 
 <style>
+
 body{
     margin:0;
     background:#07122b;
@@ -16,29 +17,39 @@ body{
     height:100vh;
 }
 
-.chat{
-    width:350px;
+.chat-box{
+    width:360px;
+    height:600px;
     background:#111c36;
-    border-radius:15px;
-    padding:10px;
+    border-radius:20px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
     box-shadow:0 0 20px rgba(0,0,0,0.5);
 }
 
-.messages{
-    height:400px;
-    overflow:auto;
-    background:#09152f;
-    border-radius:10px;
-    padding:10px;
+.header{
+    background:#2563eb;
     color:white;
+    text-align:center;
+    padding:15px;
+    font-size:20px;
 }
 
-.msg{
+.messages{
+    flex:1;
+    padding:10px;
+    overflow-y:auto;
+    background:#09152f;
+}
+
+.message{
     padding:10px;
     margin:8px 0;
-    border-radius:10px;
-    width:fit-content;
+    border-radius:12px;
     max-width:80%;
+    color:white;
+    word-wrap:break-word;
 }
 
 .user{
@@ -50,17 +61,17 @@ body{
     background:#1e293b;
 }
 
-.send{
+.input-box{
     display:flex;
-    margin-top:10px;
-    gap:5px;
+    padding:10px;
+    background:#111c36;
 }
 
 input{
     flex:1;
-    padding:12px;
     border:none;
     border-radius:10px;
+    padding:12px;
     outline:none;
 }
 
@@ -68,22 +79,28 @@ button{
     border:none;
     background:#2563eb;
     color:white;
+    margin-right:5px;
     padding:12px 15px;
     border-radius:10px;
     cursor:pointer;
 }
+
 </style>
 </head>
 
 <body>
 
-<div class="chat">
+<div class="chat-box">
+
+    <div class="header">
+        AI Chat
+    </div>
 
     <div class="messages" id="messages"></div>
 
-    <div class="send">
-        <input type="text" id="text" placeholder="اكتب رسالتك...">
+    <div class="input-box">
         <button onclick="sendMessage()">ارسال</button>
+        <input type="text" id="input" placeholder="اكتب رسالتك...">
     </div>
 
 </div>
@@ -94,17 +111,20 @@ const API_KEY = "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";
 
 async function sendMessage(){
 
-    let text = document.getElementById("text").value;
+    const input = document.getElementById("input");
+    const messages = document.getElementById("messages");
 
-    if(text == "") return;
+    const text = input.value;
 
-    let messages = document.getElementById("messages");
+    if(text === "") return;
 
     messages.innerHTML += `
-        <div class="msg user">${text}</div>
+        <div class="message user">${text}</div>
     `;
 
-    document.getElementById("text").value = "";
+    input.value = "";
+
+    messages.scrollTop = messages.scrollHeight;
 
     try{
 
@@ -133,7 +153,7 @@ async function sendMessage(){
         const reply = data.choices[0].message.content;
 
         messages.innerHTML += `
-            <div class="msg bot">${reply}</div>
+            <div class="message bot">${reply}</div>
         `;
 
         messages.scrollTop = messages.scrollHeight;
@@ -141,8 +161,8 @@ async function sendMessage(){
     }catch(error){
 
         messages.innerHTML += `
-            <div class="msg bot">
-                حدث خطأ
+            <div class="message bot">
+                حدث خطأ في الاتصال
             </div>
         `;
     }
