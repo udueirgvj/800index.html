@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مساعد الذكاء الاصطناعي</title>
+    <style>
+        /* إعدادات الألوان العامة - مريحة للعين */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* رأس الصفحة */
+        header {
+            background-color: #1e293b;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* صندوق المحادثة */
+        #chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* فقاعات الرسائل */
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 15px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        /* رسالة المستخدم */
+        .user-message {
+            background-color: #3b82f6;
+            color: white;
+            align-self: flex-start;
+            border-bottom-right-radius: 2px;
+        }
+
+        /* رسالة الذكاء الاصطناعي */
+        .ai-message {
+            background-color: white;
+            color: #1f2937;
+            align-self: flex-end;
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* مؤشر الانتظار/الكتابة */
+        .loading-message {
+            background-color: #e5e7eb;
+            color: #4b5563;
+            align-self: flex-end;
+            font-style: italic;
+        }
+
+        /* منطقة الإدخال أسفل الشاشة */
+        .input-container {
+            display: flex;
+            padding: 15px;
+            background-color: white;
+            border-top: 1px solid #e5e7eb;
+            gap: 10px;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        #user-input:focus {
+            border-color: #3b82f6;
+        }
+
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 25px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <header>🤖 مساعد الذكاء الاصطناعي</header>
+
+    <div id="chat-container">
+        <div class="message ai-message">مرحباً بك! كيف يمكنني مساعدتك اليوم؟</div>
+    </div>
+
+    <div class="input-container">
+        <input type="text" id="user-input" placeholder="اكتب رسالتك هنا..." onkeydown="checkEnter(event)">
+        <button id="send-btn" onclick="sendMessage()">إرسال</button>
+    </div>
+
+    <script>
+        // إعدادات المفتاح والرابط الخاص بـ OpenRouter
+        const API_KEY = "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";
+        const API_URL = "https://openrouter.ai/api/v1/chat/completions";
+        
+        // استخدام نموذج مجاني وسريع من جمناي متوفر على المنصة
+        const MODEL_NAME = "google/gemini-2.0-flash-exp:free"; 
+
+        // مصفوفة لحفظ سياق المحادثة
+        let conversationHistory = [];
+
+        // إمكانية الإرسال عبر زر Enter
+        function checkEnter(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const inputField = document.getElementById("user-input");
+            const sendButton = document.getElementById("send-btn");
+            const chatContainer = document.getElementById("chat-container");
+            const messageText = inputField.value.trim();
+
+            if (messageText === "") return;
+
+            // 1. عرض رسالة المستخدم في الواجهة
+            appendMessage(messageText, "user-message");
+            inputField.value = ""; // تنظيف الحقل
+
+            // تعطيل الإدخال أثناء المعالجة
+            inputField.disabled = true;
+            sendButton.disabled = true;
+
+            // 2. عرض مؤشر جاري الكتابة
+            const loadingDiv = appendMessage("جاري التفكير...", "loading-message");
+
+            // تحديث التاريخ بصيغة OpenAI المتوافقة مع OpenRouter
+            conversationHistory.push({ role: "user", content: messageText });
+
+            try {
+                // 3. إرسال الطلب إلى السيرفر
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: MODEL_NAME,
+                        messages: conversationHistory
+                    })
+                });
+
+                const data = await response.json();
+                
+                // إزالة مؤشر التحميل
+                loadingDiv.remove();
+
+                if (data.choices && data.choices[0]) {
+                    const aiResponse = data.choices[0].message.content;
+                    
+                    // 4. عرض رد الذكاء الاصطناعي
+                    appendMessage(aiResponse, "ai-message");
+                    
+                    // حفظ رد البوت في الذاكرة لكي يتذكر سياق الكلام
+                    conversationHistory.push({ role: "assistant", content: aiResponse });
+                } else {
+                    appendMessage("⚠️ حدث خطأ غير متوقع في استجابة السيرفر.", "ai-message");
+                    conversationHistory.pop(); // حظر الرسالة الأخيرة من التاريخ عند الفشل
+                }
+
+            } catch (error) {
+                loadingDiv.remove();
+                appendMessage("⚠️ فشل الاتصال. تحقق من جودة الإنترنت لديك.", "ai-message");
+                conversationHistory.pop();
+                console.error(error);
+            }
+
+            // إعادة تفعيل العناصر للكتابة مجدداً
+            inputField.disabled = false;
+            sendButton.disabled = false;
+            inputField.focus();
+        }
+
+        // دالة مساعدة لإنشاء وإضافة الفقاعات داخل الصندوق
+        function appendMessage(text, className) {
+            const chatContainer = document.getElementById("chat-container");
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${className}`;
+            messageDiv.innerText = text;
+            chatContainer.appendChild(messageDiv);
+            
+            // سحب السكرول لأسفل تلقائياً لرؤية الرسائل الجديدة
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return messageDiv;
+        }
+    </script>
+</body>
+</html>
+
